@@ -1,0 +1,30 @@
+<!doctype html>
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<meta name="viewport" content="width=device-width, height=device-height">
+	<title>Demo Calculator</title>
+
+	<link type="text/css" rel="stylesheet" href="calc.css">
+
+	<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+	<script type="text/javascript" src="lexer.js"></script>
+	<script type="text/javascript" src="decimal.js"></script>
+	<script type="text/javascript" src="calclib.js"></script>
+	<script type="text/javascript" src="symbol.js"></script>
+	<script type="text/javascript" src="parser.js"></script>
+	<script type="text/javascript" src="debug.js"></script>
+	<script type="text/javascript" src="ui.js"></script>
+</head>
+
+<body>
+	<p><b>Calculator Demo</b></p>
+	<div id="calcResultsWrapper">						
+		<ul id="calcResults"></ul>
+	</div>	
+	<div id="calcInputWrapper">
+		<input type="text" id="calcInput" spellcheck="false">
+		<div id="calcExprBtn" class="vButton">R</div>
+	</div>
+</body>
+</html>
