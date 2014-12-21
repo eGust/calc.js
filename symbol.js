@@ -18,20 +18,23 @@ function SymbolTable()
 		}
 
 		var self = SymbolTable.prototype;
+		var globals = {};
 
 		self.newSymbol = function(name, type) {
-			if (name in this.table)
+			if (name in globals || name in this.table)
 				return null;
 			return this.table[name] = Symbol(name, type, this);
 		};
 
 		self.get = function(name) {
-			return this.table[name];
+			return (name in globals ? globals[name] : this.table[name]);
 		}
 
 		self.remove = function(name) {
 			return delete this.table[name];
 		}
+
+		self.globalSymbols = globals;
 	}
 
 	if (!(this instanceof SymbolTable))

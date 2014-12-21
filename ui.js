@@ -15,6 +15,7 @@ function calc()
 	var txt = $("<li>").append(lastInput = expr).append("<br>");
 	$("#calcResults").append(txt);
 
+	var tm = Date.now();
 	parser.scanner.reset(expr);
 	try {
 		var r = parser.parse().calc(symbols);
@@ -25,6 +26,8 @@ function calc()
 	catch (e) {
 		txt.append( $("<span>").addClass('exp').append(e) );
 	}
+	tm = Date.now() - tm;
+	console.log(tm + "ms");
 
 	$("#calcResultsWrapper").scrollTop($("#calcResultsWrapper")[0].scrollHeight);
 }
@@ -33,6 +36,10 @@ $(function () {
 	$('#calcInput').focus();
 
 	$('#calcExprBtn').click(calc);
+
+	$('#ReadMe').click(function() {
+		$('.readme').toggle();
+	});
 
 	$('#calcInput').keyup(function(e) {
 		switch(e.keyCode)

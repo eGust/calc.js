@@ -1,151 +1,19 @@
 /*
-
 [dependency]
-	lexer.js
 	decimal.js
+	
+	lexer.js
+	exprs.js
 	symbol.js
 	calclib.js
 
 [classes]
-	Expression:
-		Value calc(VariantDictionary symbols)
-		int paramCount
-		Expression[] parameters
+	Stack
 
-	ValueExpr(Expression):
-		Value	value
-		func calc(symbols) => value
+	Scope
 
-	OperatorExpr(Expression):
-		Operator	op
-		func calc(symbols) => args = map(param.calc(symbols)), return op.calc(args)
-
-	ExprStackItem:
-		Expression	expr
-		StackItem	parent
-
-	Scope = ( scpValue, scpOperator, scpQueryTrue, scpQueryFalse, scpBracket, scpArray )
+	Operator
 */
-
-function ValueExpr(str) {
-	if (ValueExpr.prototype.calc == undefined) {
-		var self = ValueExpr.prototype;
-
-		self.calc = function() {
-			return this.value;
-		};
-
-		self.toString = function() {
-			return "ValueExpr(" + this.value.toString() + ")";
-		};
-	}
-
-	if (!(this instanceof ValueExpr))
-        return new ValueExpr(str);
-
-    this.value = CalcLib.stringToValue(str);
-    this.paramCount = 0;
-    this.parameters = null;
-}
-
-function VariantExpr(str) {
-	if (VariantExpr.prototype.calc == undefined) {
-		var self = VariantExpr.prototype;
-
-		self.calc = function(symbols) {
-			var symbol = symbols[this.vname];
-			if (symbol == undefined)
-				throw 'Can not find symbol: "' + this.vname + '"';
-			return symbol.getValue();
-		};
-
-		self.toString = function() {
-			return "VariantExpr(" + this.vname + ")";
-		};
-	}
-
-	if (!(this instanceof VariantExpr))
-        return new VariantExpr(str);
-
-    this.vname = str;
-    this.paramCount = 0;
-    this.parameters = null;
-}
-
-function OperatorExpr(op) {
-	if (OperatorExpr.prototype.calc == undefined) {
-		var self = OperatorExpr.prototype;
-
-		self.calc = function(symbols) {
-			/*
-			var args = new Array(this.paramCount);
-			for (var i = 0; i < args.length; i++)
-				args[i] = this.parameters[i].calc(true);
-
-			//return this.op.calc(args, symbols);
-			var r = this.op.calc(this.parameters, symbols);
-
-			if (!symbols)
-			{
-				console.log(this+"")
-				for (var i = 0; i < args.length; i++)
-					console.log("  " + args[i]);
-				console.log(" = " + r);
-			}
-
-			return r;
-			//*/
-			var fnCalc = this.op.calc;
-			if (fnCalc)
-				return fnCalc(this.parameters, symbols);
-			
-			throw "Not supported calculation of: " + this.op;
-		};
-
-		self.push = function(ve) {
-			var pcnt = this.paramCount;
-			if (pcnt >= 0 && this.index >= pcnt)
-				return false;
-
-			this.parameters[this.index++] = ve;
-			return this.index;
-		};
-
-		self.changeCurrent = function(oe) {
-			if (this.index == 0)
-				return false;
-			var i = this.index-1, ve = this.parameters[i];
-			if (!oe.push(ve))
-				return false;
-			this.parameters[i] = oe;
-			return ve;
-		}
-
-		self.modifyStacks = function(stackExpr, stackScope) {
-			return this.op.stackModifier(this, stackExpr, stackScope);
-		};
-
-		self.toString = function() {
-			var r = "OperatorExpr: " + this.op;
-			for (var i in this.parameters)
-			{
-				var lines = ("" + this.parameters[i]).split("\n");
-				for (var j in lines)
-					r += "\n\t" + lines[j];
-				//
-			}
-			return r;
-		};
-	}
-
-	if (!(this instanceof OperatorExpr))
-        return new OperatorExpr(op);
-
-    this.op = op;
-    this.paramCount = op.operand;
-    this.parameters = new Array(this.paramCount);
-    this.index = 0;
-}
 
 function Scope(name)
 {
@@ -169,8 +37,7 @@ function Scope(name)
 
 const
 	scpValue = Scope('Value'), scpOperator = Scope('Operator'), 
-	scpQueryTrue = Scope('QueryTrue'), scpQueryFalse = Scope('QueryFalse'), 
-	scpBracket = Scope('Bracket'), scpArray = Scope('Array');
+	scpQuery = Scope('Query'), scpBracket = Scope('Bracket'), scpArray = Scope('Array');
 
 function Operator(str, name, rank, operand, fnCalc) {
 	if (Operator.prototype.modifyStacks == undefined)
@@ -211,25 +78,10 @@ function Stack()
 				--this.count;
 		}
 
-		self.popItem = function() {
-			if (this.count == 0)
-				return undefined;
-			return this.items[--this.count];
-		}
-
 		self.cur = function() {
 			if (this.count == 0)
 				return undefined;
 			return this.items[this.count-1];
-		}
-
-		self.relpaceTop = function(item) {
-			var idx = this.count-1;
-			if (idx < 0)
-				return false;
-			var r = this.items[idx];
-			this.items[idx] = item;
-			return r;
 		}
 
 		self.toString = function() {
@@ -252,50 +104,57 @@ function Parser(scanner)
 		var self = Parser.prototype;
 
 		var setOperator = { }, setValue = { };
-		const ranks = [ 0, 11, 22, 33, 44, 55, 66, 77, 88, 99, ];
 
 		function generateOps() {
 			const
 				soloOps = [
-					Operator('+', 'Positive', ranks[7], 1, function(args, sbt) { return args[0].calc(sbt); }),
-					Operator('-', 'Negative', ranks[7], 1, function(args, sbt) { return CalcLib.negate(args[0].calc(sbt)); }),
-					Operator('~', 'BitNot', ranks[3], 1, function(args, sbt) { return CalcLib.bitNot(args[0].calc(sbt)); }),
-					Operator('!', 'LogicNot', ranks[9], 1, function(args, sbt) { return CalcLib.logicNot(args[0].calc(sbt)); }),
-					Operator('(', 'OpenBracket', ranks[0], 1, function(args, sbt) { return args[0].calc(sbt); }),
-					Operator('[', 'OpenArray', ranks[0], -1, function(args, sbt) { return CalcLib.arrayValue(args, sbt); }),
+					Operator('+', 'Positive', 45, 1, function(args, sbt) { return args[0].calc(sbt); }),
+					Operator('-', 'Negative', 45, 1, function(args, sbt) { return CalcLib.negate(args[0].calc(sbt)); }),
+					Operator('~', 'BitNot', 43, 1, function(args, sbt) { return CalcLib.bitNot(args[0].calc(sbt)); }),
+					Operator('!', 'LogicNot', 41, 1, function(args, sbt) { return CalcLib.logicNot(args[0].calc(sbt)); }),
+
+					Operator('(', 'OpenBracket', 1, 1, function(args, sbt) { return args[0].calc(sbt); }),
+					Operator('[', 'OpenArray', 1, -1, function(args, sbt) { return CalcLib.arrayValue(args, sbt); }),
 				],
 				duoOps = [
-					Operator('**', 'Power', ranks[9], 2, function(args, sbt) { return CalcLib.power(args[0].calc(sbt), args[1].calc(sbt)); }),
-					Operator('*', 'Times', ranks[8], 2, function(args, sbt) { return CalcLib.multiply(args[0].calc(sbt), args[1].calc(sbt)); }),
-					Operator('/', 'Divide', ranks[8], 2, function(args, sbt) { return CalcLib.divide(args[0].calc(sbt), args[1].calc(sbt)); }),
-					Operator('%', 'Modulo', ranks[8], 2, function(args, sbt) { return CalcLib.modulo(args[0].calc(sbt), args[1].calc(sbt)); }),
-					Operator('\\', 'IntDivide', ranks[8], 2, function(args, sbt) { return CalcLib.intDivide(args[0].calc(sbt), args[1].calc(sbt)); }),
+					Operator('(', 'OpenFunction', 81, -1, null /* not real op holder */ ),
+					Operator('[', 'OpenDerefArray', 81, -1, null /* not real op holder */ ),
+					Operator('.', 'Property', 81, 2, function(args, sbt) { return CalcLib.property(args[0], args[1], sbt); }),
 
-					Operator('+', 'Plus', ranks[7], 2, function(args, sbt) { return CalcLib.add(args[0].calc(sbt), args[1].calc(sbt)); }),
-					Operator('-', 'Minus', ranks[7], 2, function(args, sbt) { return CalcLib.sub(args[0].calc(sbt), args[1].calc(sbt)); }),
-					Operator('&', 'BitAnd', ranks[5], 2, function(args, sbt) { return CalcLib.bitAnd(args[0].calc(sbt), args[1].calc(sbt)); }),
-					Operator('|', 'BitOr', ranks[5], 2, function(args, sbt) { return CalcLib.bitOr(args[0].calc(sbt), args[1].calc(sbt)); }),
-					Operator('^', 'BitXor', ranks[5], 2, function(args, sbt) { return CalcLib.bitXor(args[0].calc(sbt), args[1].calc(sbt)); }),
+					Operator('**', 'Power', 47, 2, function(args, sbt) { return CalcLib.power(args[0].calc(sbt), args[1].calc(sbt)); }),
+					Operator('*', 'Times', 46, 2, function(args, sbt) { return CalcLib.multiply(args[0].calc(sbt), args[1].calc(sbt)); }),
+					Operator('/', 'Divide', 46, 2, function(args, sbt) { return CalcLib.divide(args[0].calc(sbt), args[1].calc(sbt)); }),
+					Operator('%', 'Modulo', 46, 2, function(args, sbt) { return CalcLib.modulo(args[0].calc(sbt), args[1].calc(sbt)); }),
+					Operator('//', 'IntDivide', 46, 2, function(args, sbt) { return CalcLib.intDivide(args[0].calc(sbt), args[1].calc(sbt)); }),
 
-					Operator('==', 'CompareEqual', ranks[4], 2, function(args, sbt) { return CalcLib.isEqual(args[0].calc(sbt), args[1].calc(sbt)); }),
-					Operator('!=', 'CompareNotEqual', ranks[4], 2, function(args, sbt) { return CalcLib.notEqual(args[0].calc(sbt), args[1].calc(sbt)); }),
-					Operator('>', 'CompareGreater', ranks[4], 2, function(args, sbt) { return CalcLib.isGreater(args[0].calc(sbt), args[1].calc(sbt)); }),
-					Operator('>=', 'CompareGreaterEqual', ranks[4], 2, function(args, sbt) { return CalcLib.isGreaterEqual(args[0].calc(sbt), args[1].calc(sbt)); }),
-					Operator('<', 'CompareLess', ranks[4], 2, function(args, sbt) { return CalcLib.isLess(args[0].calc(sbt), args[1].calc(sbt)); }),
-					Operator('<=', 'CompareLessEqual', ranks[4], 2, function(args, sbt) { return CalcLib.isLessEqual(args[0].calc(sbt), args[1].calc(sbt)); }),
+					Operator('+', 'Plus', 45, 2, function(args, sbt) { return CalcLib.add(args[0].calc(sbt), args[1].calc(sbt)); }),
+					Operator('-', 'Minus', 45, 2, function(args, sbt) { return CalcLib.sub(args[0].calc(sbt), args[1].calc(sbt)); }),
+					//Operator('<<', 'ShiftLeft', 44, 2, function(args, sbt) { return CalcLib.shl(args[0].calc(sbt), args[1].calc(sbt)); }),
+					//Operator('>>', 'ShiftRight', 44, 2, function(args, sbt) { return CalcLib.shr(args[0].calc(sbt), args[1].calc(sbt)); }),
+					//Operator('>>>', 'ZeroShiftRight', 44, 2, function(args, sbt) { return CalcLib.sar(args[0].calc(sbt), args[1].calc(sbt)); }),
+					Operator('&', 'BitAnd', 43, 2, function(args, sbt) { return CalcLib.bitAnd(args[0].calc(sbt), args[1].calc(sbt)); }),
+					Operator('|', 'BitOr', 43, 2, function(args, sbt) { return CalcLib.bitOr(args[0].calc(sbt), args[1].calc(sbt)); }),
+					Operator('^', 'BitXor', 43, 2, function(args, sbt) { return CalcLib.bitXor(args[0].calc(sbt), args[1].calc(sbt)); }),
 
-					Operator('&&', 'LogicAnd', ranks[3], 2, function(args, sbt) { return CalcLib.logicAnd(args[0], args[1], sbt); }),
-					Operator('||', 'LogicOr', ranks[3], 2, function(args, sbt) { return CalcLib.logicOr(args[0], args[1], sbt); }),
-					Operator('?', 'Query', ranks[2], 3, function(args, sbt) { return CalcLib.query(args[0], args[1], args[2], sbt); }),
-					Operator('=', 'Assign', ranks[1], 0, function(args, sbt) { return CalcLib.assign(args[0], args[1].calc(sbt), sbt); }),
+					Operator('==', 'CompareEqual', 42, 2, function(args, sbt) { return CalcLib.isEqual(args[0].calc(sbt), args[1].calc(sbt)); }),
+					Operator('!=', 'CompareNotEqual', 42, 2, function(args, sbt) { return CalcLib.notEqual(args[0].calc(sbt), args[1].calc(sbt)); }),
+					Operator('>', 'CompareGreater', 42, 2, function(args, sbt) { return CalcLib.isGreater(args[0].calc(sbt), args[1].calc(sbt)); }),
+					Operator('>=', 'CompareGreaterEqual', 42, 2, function(args, sbt) { return CalcLib.isGreaterEqual(args[0].calc(sbt), args[1].calc(sbt)); }),
+					Operator('<', 'CompareLess', 42, 2, function(args, sbt) { return CalcLib.isLess(args[0].calc(sbt), args[1].calc(sbt)); }),
+					Operator('<=', 'CompareLessEqual', 42, 2, function(args, sbt) { return CalcLib.isLessEqual(args[0].calc(sbt), args[1].calc(sbt)); }),
 
-					Operator(':', 'Colon', ranks[2], 0, null),
-					Operator(',', 'Comma', ranks[0], 0, null),
+					Operator('&&', 'LogicAnd', 41, 2, function(args, sbt) { return CalcLib.logicAnd(args[0], args[1], sbt); }),
+					Operator('||', 'LogicOr', 41, 2, function(args, sbt) { return CalcLib.logicOr(args[0], args[1], sbt); }),
 
-					Operator('(', 'OpenFunction', ranks[0], -1, function(args, sbt) { return CalcLib.callFunction(args, sbt); }),
-					Operator('[', 'OpenDerefArray', ranks[0], -1, function(args, sbt) { return CalcLib.derefArray(args, sbt); }),
-					Operator(')', 'CloseBracket', ranks[0], 0, null),
-					Operator(']', 'CloseArray', ranks[0], 0, null),
+					Operator('?', 'Query', 30, 3, function(args, sbt) { return CalcLib.query(args[0], args[1], args[2], sbt); }),
+					Operator(':', 'Colon', 30, 0, null),
+
+					Operator('@', 'Unit', 20, 2, function(args, sbt) { return CalcLib.setUnit(args[0], args[1], args[2], sbt); }),
+					Operator('=', 'Assign', 10, 2, function(args, sbt) { return CalcLib.assign(args[0], args[1].calc(sbt), sbt); }),
+
+					Operator(')', 'CloseBracket', 1, 0, null),
+					Operator(']', 'CloseArray', 1, 0, null),
+					Operator(',', 'Comma', 1, 0, null),
 				];
 
 			for (var i in soloOps)
@@ -310,22 +169,24 @@ function Parser(scanner)
 			}
 		}
 
-		const opGaurdOp = Operator('#', '.GAURD', -1, 1, null);
+		const	opGaurdOp = Operator('#', '.GAURD', -1, 1, null),
+				opFunction = Operator('(', 'OpenFunction', 1, -1, function(args, sbt) { return CalcLib.callFunction(args, sbt); }),
+				opDerefArray = Operator('[', 'OpenDerefArray', 1, -1, function(args, sbt) { return CalcLib.derefArray(args, sbt); });
 
 		function setModifiers()
 		{
 			opGaurdOp.stackModifier = function (curOp, stackExpr, stackScope)
-			{	// + - ~ ! #GAURD
+			{	// #GAURD
 				stackExpr.push(curOp)
 				stackScope.curScope = scpOperator;
 				return true;
 			};
 
 			function soloOpModifierSimple(curOp, stackExpr, stackScope)
-			{	// + - ~ ! #GAURD
+			{	// + - ~ !
 				var stkOp = stackExpr.cur();
 				stkOp.push(curOp);
-				stackExpr.push(curOp)
+				stackExpr.push(curOp);
 				stackScope.curScope = scpOperator;
 				return true;
 			}
@@ -340,13 +201,13 @@ function Parser(scanner)
 					stkOp = stackExpr.cur();
 				}
 
-				stkOp.changeCurrent(curOp);
+				stkOp.changeCurrentParameter(curOp);
 				stackExpr.push(curOp);
 				stackScope.curScope = scpOperator;
 				return true;
 			}
 
-			const SoloSimples = "+ - ~ !".split(" "), DuoSimples = "** * / % \\  + - & | ^  == != > >= > >=  && ||".split(" ");
+			const SoloSimples = "+ - ~ !".split(" "), DuoSimples = "** * / % //  + - & | ^  == != > >= > >=  && ||".split(" ");
 
 			for (var i in SoloSimples)
 			{
@@ -362,7 +223,95 @@ function Parser(scanner)
 					setValue[op].stackModifier = duoOpModifierSimple;
 			}
 
-			// not supported yet: ? : = ( , ) [ $ ]
+			/*
+			todo:
+				= ? :
+				[] () ,
+				@
+			*/
+			function getOpenerAsValueStackModifier(scp)
+			{
+				return function (curOp, stackExpr, stackScope)
+				{	// ( [	Bracket Array
+					var stkOp = stackExpr.cur();
+					stkOp.push(curOp);
+					stackExpr.push(curOp);
+					stackScope.push(scp);
+					stackScope.curScope = scpOperator;
+					return true;
+				};
+			};
+
+			setOperator['('].stackModifier = getOpenerAsValueStackModifier(scpBracket);
+			setOperator['['].stackModifier = getOpenerAsValueStackModifier(scpArray);
+
+			function getOpenerAsOperatorStackModifier(scp, realOp)
+			{
+				return function (curOp, stackExpr, stackScope)
+				{	// ( [	Function Dereference
+					var stkOp = stackExpr.cur(), crank = curOp.op.rank;
+
+					while (crank <= stkOp.op.rank)
+					{
+						stackExpr.pop();
+						stkOp = stackExpr.cur();
+					}
+
+					curOp.op = realOp;
+					stkOp.changeCurrentParameter(curOp);
+					stackExpr.push(curOp);
+					stackScope.push(scp);
+					stackScope.curScope = scpOperator;
+					return true;
+				};
+			};
+
+			setValue['('].stackModifier = getOpenerAsOperatorStackModifier(scpBracket, opFunction);
+			setValue['['].stackModifier = getOpenerAsOperatorStackModifier(scpArray, opDerefArray);
+
+			function getCloserStackModifier(scp, opstr)
+			{
+				return function (curOp, stackExpr, stackScope)
+				{	// ) ]
+					if (stackScope.cur() != scp)
+						throw 'Not matched close bracket ")" or "]"';
+
+					var stkOp = stackExpr.cur();
+					while (stkOp.op.op != opstr)
+					{
+						stackExpr.pop();
+						stkOp = stackExpr.cur();
+					}
+
+					stackExpr.pop();
+					stackScope.pop();
+					stackScope.curScope = scpValue;
+					return true;
+				};
+			};
+
+			setValue[')'].stackModifier = getCloserStackModifier(scpBracket, '(');
+			setValue[']'].stackModifier = getCloserStackModifier(scpArray, '[');
+
+			setValue[','].stackModifier = function (curOp, stackExpr, stackScope) {	// ,
+				var scp = stackScope.cur();
+				if (scp != scpArray && scp != scpBracket)
+					throw 'Comma "," not in any opened bracket range.';
+
+				var stkOp = stackExpr.cur(), crank = curOp.op.rank;
+				while (stkOp.op.rank != crank )
+				{
+					stackExpr.pop();
+					stkOp = stackExpr.cur();
+				}
+
+				var curOp = stkOp.op;
+				if ( curOp.op != '[' && curOp != opFunction )
+					throw 'Invalid position of ",".';
+
+				stackScope.curScope = scpOperator;
+				return true;
+			};
 		}
 
 		generateOps();
@@ -425,7 +374,10 @@ function Parser(scanner)
 				//console.log(""+opGaurd.parameters[0]);
 			}
 
-			if (stackScope.count == 0 && stackScope.curScope == scpValue)
+			if (stackScope.count != 0)
+				throw stackScope.count + ' of open operatorers like "(" or "[" not be closed!';
+
+			if (stackScope.curScope == scpValue)
 				return opGaurd.parameters[0];
 		}
 
