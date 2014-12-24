@@ -24,8 +24,6 @@ function getCalculatorLibrary() {
 				case 'e':
 					break;
 				default:
-					start = 1;
-					base = 8;
 			}
 		}
 
@@ -131,7 +129,7 @@ function getCalculatorLibrary() {
 
 	function extandHex(v, idx)
 	{
-		var hs = v.isNeg() ? v.minus(bitHolders.neg[idx]).toString(16) : v.toString(16);
+		var hs = v.isNeg() ? v.plus(bitHolders.pos[idx]).toString(16) : v.toString(16);
 		return Zeros.substr(0, bitHolders.hcount[idx] - hs.length) + hs;
 	}
 

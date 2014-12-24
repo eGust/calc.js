@@ -186,7 +186,7 @@ function Scanner(str) {
 
 		const
 			ValidBinChars = { '0': 0, '1': 1, },
-			ValidOctChars = { '0': 0, '1': 1, '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, },
+			//ValidOctChars = { '0': 0, '1': 1, '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, },
 			ValidDecChars = { '0': 0, '1': 1, '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9, },
 			ValidHexChars = {
 				'0': 0x00, '1': 0x01, '2': 0x02, '3': 0x03, '4': 0x04, '5': 0x05, '6': 0x06, '7': 0x07, '8': 0x08, '9': 0x09,
@@ -256,8 +256,8 @@ function Scanner(str) {
 				return;
 			}
 
-			var r, e;
-			switch (context.text[context.index]) {
+			var r, e, c = context.text[context.index];
+			switch (c) {
 				case '.':
 					doScanNumberFloatPart(context, true);
 					return;
@@ -275,13 +275,11 @@ function Scanner(str) {
 					r = doScanNumberSubset(context, ValidHexChars, false);
 					e = tkInvalidHex;
 					break;
-				case 'e':
 				default:
 					context.index--;
-					r = doScanNumberSubset(context, ValidOctChars, true);
-					e = tkInvalidOctal;
+					r = doScanNumberSubset(context, ValidDecChars, true);
+					e = tkInvalidNumber;
 			}
-
 			context.nextToken = r ? tkNumber : e;
 		}
 

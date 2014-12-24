@@ -1,0 +1,17 @@
+{
+  "manifest_version": 2,
+
+  "name": "Excellent Calculator",
+  "description": "A powerful calculator.",
+  "version": "0.v",
+  "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'",
+
+  "browser_action": {
+    "default_icon": "calc.png",
+    "default_popup": "index.html"
+  },
+  
+  "permissions": [
+    "storage"
+  ]
+}

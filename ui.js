@@ -153,11 +153,41 @@ function Deque()
 	this.clear();
 }
 
-var inputHistory = Deque(), parser = Parser(Scanner()), symbols = SymbolTable();
+var inputHistory = Deque(), parser = Parser(Scanner()), symbols = SymbolTable(), 
+	sepOption = {
+			'dec': { 'scale': 'dec', 'width': 3, 'char': ',', 'prefix': '', 'use': false, },
+			'hex': { 'scale': 'hex', 'width': 4, 'char': '_', 'prefix': '0x', 'use': false, },
+			//'oct': { 'scale': 'oct', 'width': 4, 'char': '_', 'use': false, },
+			'bin': { 'scale': 'bin', 'width': 8, 'char': '_', 'prefix': '0b', 'use': false, },
+		},
+	realOpt = { 'scale': 'real', 'width': 3, 'char': ',', 'prefix': '', 'use': false, },
+	intScale = null;
 
 function clearInput()
 {
 	$("#calcInput").val("");
+}
+
+function clearOutput()
+{
+	$('#calcResults').text('');
+	inputHistory.clear();
+}
+
+function changeIntegerScale(scale)
+{
+	if (intScale && intScale.scale == scale)
+		return;
+
+	intScale = sepOption[scale];
+	if (intScale.use)
+		$('#IntSep').addClass('down');
+	else
+		$('#IntSep').removeClass('down');
+	$('#IntSeparator').val(intScale.char);
+	$('#IntSepWidth').val(intScale.width);
+
+	updateResultUI($('span.result.int'));
 }
 
 function calc()
@@ -179,18 +209,90 @@ function calc()
 	var tm = Date.now();
 	parser.scanner.reset(expr);
 	try {
-		var r = parser.parse().calc(symbols);
-		txt.append( $("<span>").addClass('result').append("" + r).click(function () {
-			$("#calcInput").val($(this).text()).focus().select();
-		}) );
+		var r = parser.parse().calc(symbols),
+			item = $("<span>").addClass('result').click(function () {
+				$("#calcInput").val($(this).text().replace(/,/g, '_')).focus().select();
+		  	});
+
+		if ( r.isInt() ) {
+			var neg = '';
+			if (r.isNeg())
+			{
+				r = r.neg();
+				neg = '-';
+			}
+			item.attr('data-dec', r.toString(10))
+				.attr('data-hex', r.toString(16).toUpperCase())
+				.attr('data-bin', r.toString(2))
+				.attr('data-neg', neg)
+				//.attr('data-oct', r.toString(8))
+				.addClass('int');
+		} else {
+			item.addClass('real').attr('data-real', r.toString(10)).text(r.toString());
+		}
+		txt.append(item);
+		updateResultUI(item);
 	}
 	catch (e) {
-		txt.append( $("<span>").addClass('exp').append(e) );
+		txt.append( $("<span>").addClass('result').addClass('error').append(e) );
 	}
 	tm = Date.now() - tm;
 	console.log(tm + "ms");
 
 	$("#calcResultsWrapper").scrollTop($("#calcResultsWrapper")[0].scrollHeight);
+}
+
+function updateAllResultUI()
+{
+	updateResultUI($('span.result'));
+}
+
+function changeIntSeparator()
+{
+	intScale.use = $('#IntSep').hasClass('down');
+	intScale.width = $('#IntSepWidth').val()|0;
+	intScale.char = $('#IntSeparator').val();
+	updateResultUI($('span.result.int'));
+}
+
+function changeRealSeparator()
+{
+	realOpt.use = $('#RealSep').hasClass('down');
+	realOpt.width = $('#RealSepWidth').val()|0;
+	realOpt.char = $('#RealSeparator').val();
+	updateResultUI($('span.result.real'));
+}
+
+function updateResultUI(jqobj)
+{
+	var	
+		realRef = realOpt.use ? new RegExp('([0-9a-fA-F])(?=([0-9a-fA-F]{' + realOpt.width + '})+\\b)', "g") : null,
+		realtos = "$&"+realOpt.char,
+		prefix = intScale.prefix, 
+		tag = 'data-'+intScale.scale, 
+		ref = intScale.use ? new RegExp('([0-9a-fA-F])(?=([0-9a-fA-F]{' + intScale.width + '})+\\b)', "g") : null,
+		tos = "$&"+intScale.char;
+
+	prefix = (prefix != '' && intScale.use && intScale.char == '_') ? prefix + '_' : prefix;
+	jqobj.each(function() {
+		var item = $(this), s = '';
+
+		if (item.hasClass('int')) {
+			s = $(this).attr(tag);
+			s = $(this).attr('data-neg') + prefix + (ref ? s.replace(ref, tos) : s);
+		} else if (item.hasClass('real')) {
+			s = $(this).attr('data-real');
+			if (realOpt.use)
+			{
+				var parts = s.split('.');
+				parts[0] = parts[0].replace(realRef, realtos);
+				parts[1] = parts[1].replace(/(\d{3})/g, realtos);
+				s = parts[0] + '.' + parts[1];
+			}
+		} else
+			return;
+		item.text(s);
+	});
 }
 
 $(function () {
@@ -201,6 +303,8 @@ $(function () {
 	$('#ReadMe').click(function() {
 		$('.readme').toggle();
 	});
+
+	$('#Clear').click(clearOutput);
 
 	$('#calcInput').keyup(function(e) {
 		switch(e.keyCode)
@@ -228,4 +332,48 @@ $(function () {
 		}
 
 	});
+
+	$('.button.grouped').click(function() {
+		var btn = $(this);
+		if (btn.hasClass('down'))
+			return;
+
+		$('.button[data-group]').removeClass('down');
+		btn.addClass('down');
+		changeIntegerScale(btn.attr('data-scale'));
+	});
+
+	$('.button[data-button-style="Downable"]').click(function() {
+		var btn = $(this);
+		if (btn.hasClass('down'))
+			btn.removeClass('down');
+		else
+			btn.addClass('down');
+	});
+
+	$('#IntSep').click(changeIntSeparator);
+
+	$('#IntSeparator').change(function () {
+		$('#IntSep').addClass('down');
+		changeIntSeparator();
+	});
+
+	$('#IntSepWidth').change(function () {
+		$('#IntSep').addClass('down');
+		changeIntSeparator();
+	});
+
+	$('#RealSep').click(changeRealSeparator);
+
+	$('#RealSeparator').change(function () {
+		$('#RealSep').addClass('down');
+		changeRealSeparator();
+	});
+
+	$('#RealSepWidth').change(function () {
+		$('#RealSep').addClass('down');
+		changeRealSeparator();
+	});
+
+	$('#Dec').click();
 });
