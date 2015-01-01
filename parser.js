@@ -146,10 +146,10 @@ function Parser(scanner)
 					Operator('&&', 'LogicAnd', 41, 2, function(args, sbt) { return CalcLib.logicAnd(args[0], args[1], sbt); }),
 					Operator('||', 'LogicOr', 41, 2, function(args, sbt) { return CalcLib.logicOr(args[0], args[1], sbt); }),
 
-					Operator('?', 'Query', 30, 3, function(args, sbt) { return CalcLib.query(args[0], args[1], args[2], sbt); }),
+					Operator('?', 'Query', 30, 3, null /* not real op holder */),
 					Operator(':', 'Colon', 30, 0, null),
 
-					Operator('@', 'Unit', 20, 2, function(args, sbt) { return CalcLib.setUnit(args[0], args[1], args[2], sbt); }),
+					Operator('@', 'Unit', 20, 2, function(args, sbt) { return CalcLib.setUnit(args[0], args[1], sbt); }),
 					Operator('=', 'Assign', 10, 2, function(args, sbt) { return CalcLib.assign(args[0], args[1].calc(sbt), sbt); }),
 
 					Operator(')', 'CloseBracket', 1, 0, null),
@@ -170,8 +170,9 @@ function Parser(scanner)
 		}
 
 		const	opGaurdOp = Operator('#', '.GAURD', -1, 1, null),
-				opFunction = Operator('(', 'OpenFunction', 1, -1, function(args, sbt) { return CalcLib.callFunction(args, sbt); }),
-				opDerefArray = Operator('[', 'OpenDerefArray', 1, -1, function(args, sbt) { return CalcLib.derefArray(args, sbt); });
+				opQuest = Operator('?:', 'Quest', 30, 3, function(args, sbt) { return CalcLib.quest(args[0].calc(sbt), args[1], args[2], sbt); }),
+				opFunction = Operator('(', 'OpenFunction', 1, -1, CalcLib.callFunction ),
+				opDerefArray = Operator('[', 'OpenDerefArray', 1, -1, CalcLib.derefArray );
 
 		function setModifiers()
 		{
@@ -223,12 +224,6 @@ function Parser(scanner)
 					setValue[op].stackModifier = duoOpModifierSimple;
 			}
 
-			/*
-			todo:
-				= ? :
-				[] () ,
-				@
-			*/
 			function getOpenerAsValueStackModifier(scp)
 			{
 				return function (curOp, stackExpr, stackScope)
@@ -312,6 +307,62 @@ function Parser(scanner)
 				stackScope.curScope = scpOperator;
 				return true;
 			};
+
+			setValue['?'].stackModifier = function (curOp, stackExpr, stackScope) {	// ?
+				var stkOp = stackExpr.cur(), crank = curOp.op.rank;
+
+				while (crank < stkOp.op.rank)
+				{
+					stackExpr.pop();
+					stkOp = stackExpr.cur();
+				}
+
+				stkOp.changeCurrentParameter(curOp);
+				stackExpr.push(curOp);
+				stackScope.push(scpQuery);
+				stackScope.curScope = scpOperator;
+				return true;
+			}
+
+			setValue[':'].stackModifier = function (curOp, stackExpr, stackScope) {	// :
+				var scp = stackScope.cur();
+				if (scp != scpQuery)
+					throw 'Colon ":" not in a question "?" expression.';
+
+				var stkOp = stackExpr.cur();
+
+				while (stkOp.op.op != '?')
+				{
+					stackExpr.pop();
+					stkOp = stackExpr.cur();
+				}
+
+				stkOp.op = opQuest;
+				stackScope.pop();
+				stackScope.curScope = scpOperator;
+				return true;
+			}
+
+			setValue['='].stackModifier = function (curOp, stackExpr, stackScope)
+			{	// =
+				var stkOp = stackExpr.cur(), crank = curOp.op.rank;
+
+				while (crank < stkOp.op.rank)
+				{
+					stackExpr.pop();
+					stkOp = stackExpr.cur();
+				}
+
+				stkOp.changeCurrentParameter(curOp);
+				stackExpr.push(curOp);
+				stackScope.curScope = scpOperator;
+				return true;
+			}
+
+			/*
+			todo:
+				@
+			*/
 		}
 
 		generateOps();
@@ -351,7 +402,7 @@ function Parser(scanner)
 						if (curScope != scpOperator)
 							throw "Invalid Operator: " + scanner.nextToken;
 
-						var ve = scanner.nextToken == tkIdentity ? VariantExpr(str) : ValueExpr(str), oe = stackExpr.cur();
+						var ve = scanner.nextToken == tkIdentity ? IdentityExpr(str) : ValueExpr(str, scanner.nextToken == tkNumber), oe = stackExpr.cur();
 						if (!oe.push(ve))
 						{
 							// failed!
@@ -374,11 +425,21 @@ function Parser(scanner)
 				//console.log(""+opGaurd.parameters[0]);
 			}
 
-			if (stackScope.count != 0)
-				throw stackScope.count + ' of open operatorers like "(" or "[" not be closed!';
+			if (stackScope.count > 0)
+			{
+				/*
+				if (stackScope.cur() == scpQuery)
+				{
+					stackScope.pop();
+				} else
+				*/
+					throw stackScope.count + ' of open operatorer(s) like "?", "(", "[" not be closed!';
+			}
 
-			if (stackScope.curScope == scpValue)
-				return opGaurd.parameters[0];
+			if (stackScope.curScope != scpValue)
+				throw 'The expression is not completed!';
+
+			return opGaurd.parameters[0];
 		}
 
 	}

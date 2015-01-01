@@ -3,7 +3,7 @@
 <head>
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
 	<meta name="viewport" content="width=device-width, height=device-height">
-	<title>Demo Calculator</title>
+	<title>Excellent Calculator</title>
 
     <link rel="shortcut icon" href="calc.png" type="image/png">
 	<link type="text/css" rel="stylesheet" href="calc.css">
@@ -11,9 +11,9 @@
 	<script type="text/javascript" src="libs/jquery.min.js"></script>
 	<script type="text/javascript" src="libs/decimal.min.js"></script>
 	<script type="text/javascript" src="lexer.js"></script>
+	<script type="text/javascript" src="symbol.js"></script>
 	<script type="text/javascript" src="calclib.js"></script>
 	<script type="text/javascript" src="exprs.js"></script>
-	<script type="text/javascript" src="symbol.js"></script>
 	<script type="text/javascript" src="parser.js"></script>
 	<script type="text/javascript" src="debug.js"></script>
 	<script type="text/javascript" src="ui.js"></script>
@@ -21,7 +21,8 @@
 
 <body>
 	<div id="Caption">
-		<h2>eCalculator v0.2</h2>
+		<h2>eCalculator v0.3</h2>
+		<a target="_blank" href="about.html" class="right-top">About</a>
 		<div id="Options">
 			<span class="group">
 				<b>Int</b>
@@ -72,95 +73,6 @@
 	<div id="calcInputWrapper">
 		<input type="text" id="calcInput" spellcheck="false">
 		<div id="calcExprBtn" class="vButton">R</div>
-	</div>
-
-	<div>
-		<div class="button" id="ReadMe">Features</div>
-		<div class="readme" style="display: none;">
-			<ul>
-				Used MikeMcl's decimal.js library:
-				<li><a href='https://github.com/MikeMcl/decimal.js'>https://github.com/MikeMcl/decimal.js</a></li>
-				<br>
-				Basic Operations:
-				<li>Input expression, press ENTER or click the R button.</li>
-				<li>Press ESC to clear the input text.</li>
-				<li>Press UP/DOWN to select history input.</li>
-				<li>Click the result number to put it to input text.</li>
-
-				<br>
-				Numbers:
-				<li>Decimal by default.</li>
-				<li>Prefix 0b for binary.</li>
-				<li>Prefix 0x for hex.</li>
-				<li>Underscore _ can be in a number ( exp. 10_000 ).</li>
-
-				<br>
-				Currently supported operators:
-				<li>
-					Basic: 
-<pre>
-+ : Plus (&plus;)
-- : Minus (&minus;) 
-* : Times (&times;) 
-/ : Divide (&divide;) 
-% : Module
-</pre>
-				</li>
-				<li>
-					Extanded: 
-<pre>
-** : Power
-// : Integer Divide
-</pre>
-				</li>
-				<li>
-					Bitwise (integers only): 
-<pre>
-~ : Bitwise NOT
-&amp; : Bitwise AND
-| : Bitwise OR
-^ : Bitwise XOR
-</pre>
-				</li>
-				<li>
-					Logical (true = 1, false = 0): 
-<pre>
-! : Logical NOT
-&amp;&amp; : Logical  AND
-|| : Logical  OR
-</pre>
-				</li>
-				<li>
-					Relational (true = 1, false = 0): 
-<pre>
-== : Equal
-!= : Not equal
-&gt; : Greater than
-&lt; : Less than
-&gt;= : Greater than or Equal to
-&lt;= : Less than or Equal to
-</pre>
-				</li>
-
-				<lt>Operator Orders:</lt>
-				<li>Use <code>(</code> and <code>)</code> to promote orders.
-<pre>
-1	**
-2	* / % //
-3	+ -
-4	~ &amp; | ^
-5	! &amp;&amp; ||
-6	== != &gt; &lt; &gt;= &lt;=
-</pre>
-				</li>
-			</ul>
-			<a href="https://github.com/eGust/calc.js">https://github.com/eGust/calc.js</a>
-			<h2>Author</h2>
-			<p>
-				eGust<br>
-				egustc@gmail.com<br>
-			</p>
-		</div>
 	</div>
 </body>
 </html>

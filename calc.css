@@ -20,6 +20,7 @@ li {
 	text-align: -webkit-match-parent;
 	font-family: courier, monospace; 
 	font-size: 14px;
+	word-wrap: break-word;
 }
 
 .result {
@@ -27,6 +28,7 @@ li {
 	font-size: 15px;
 	font-weight: bold;
 	cursor: pointer;
+	word-wrap: break-word;
 }
 
 .result.int {
@@ -53,6 +55,7 @@ li {
 	width: 480px;
 	height: 300px;
 	border-radius: 3px;
+	overflow-y: scroll;
 }
 
 #calcInputWrapper {
@@ -160,6 +163,11 @@ select {
 	width: 35px;
 }
 
+pre.result {
+	margin-top: 5px;
+	margin-bottom: 0;
+}
+
 .button.down {
 	border-color: lime;
 	background-color: black;
@@ -181,9 +189,9 @@ select {
 }
 
 #Clear {
-	position: absolute;
+	position: fixed;
 	top: 2px;
-	right: 3px;
+	left: 400px;
 }
 
 .readme {
@@ -216,4 +224,10 @@ select {
 	display: inline-block;
 	text-align: center;
 	cursor: default;
+}
+
+.right-top {
+	position: absolute;
+	top: 0px;
+	right: 0px;
 }

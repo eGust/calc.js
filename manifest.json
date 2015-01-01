@@ -3,7 +3,8 @@
 
   "name": "Excellent Calculator",
   "description": "A powerful calculator.",
-  "version": "0.v",
+  "version": "0.2",
+  "version_name": "0.2 beta",
   "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'",
 
   "browser_action": {

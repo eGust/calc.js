@@ -153,7 +153,7 @@ function Deque()
 	this.clear();
 }
 
-var inputHistory = Deque(), parser = Parser(Scanner()), symbols = SymbolTable(), 
+var inputHistory = Deque(), parser = Parser(Scanner()), symbols = SymbolStack(), 
 	sepOption = {
 			'dec': { 'scale': 'dec', 'width': 3, 'char': ',', 'prefix': '', 'use': false, },
 			'hex': { 'scale': 'hex', 'width': 4, 'char': '_', 'prefix': '0x', 'use': false, },
@@ -187,7 +187,7 @@ function changeIntegerScale(scale)
 	$('#IntSeparator').val(intScale.char);
 	$('#IntSepWidth').val(intScale.width);
 
-	updateResultUI($('span.result.int'));
+	updateResultUI($('.result.int'));
 }
 
 function calc()
@@ -203,38 +203,53 @@ function calc()
 	inputHistory.push(expr);
 	inputHistory.icur = curText = null;
 
-	var txt = $("<li>").append(expr).append("<br>");
+	var txt = $("<li>").append(expr);
 	$("#calcResults").append(txt);
 
 	var tm = Date.now();
 	parser.scanner.reset(expr);
 	try {
 		var r = parser.parse().calc(symbols),
-			item = $("<span>").addClass('result').click(function () {
-				$("#calcInput").val($(this).text().replace(/,/g, '_')).focus().select();
+			item = $("<pre>").addClass('result').click(function () {
+				var ci = $("#calcInput");
+				ci[0].setRangeText( $(this).text().replace(/,/g, '_') );
+				ci.focus();
 		  	});
 
-		if ( r.isInt() ) {
-			var neg = '';
-			if (r.isNeg())
-			{
-				r = r.neg();
-				neg = '-';
-			}
-			item.attr('data-dec', r.toString(10))
-				.attr('data-hex', r.toString(16).toUpperCase())
-				.attr('data-bin', r.toString(2))
-				.attr('data-neg', neg)
-				//.attr('data-oct', r.toString(8))
-				.addClass('int');
-		} else {
-			item.addClass('real').attr('data-real', r.toString(10)).text(r.toString());
+		switch (r.type) {
+			case vtNumber:
+				r = r.value;
+				if ( r.isInt() ) {
+					var neg = '';
+					if (r.isNeg())
+					{
+						r = r.neg();
+						neg = '-';
+					}
+					item.attr('data-dec', r.toString(10))
+						.attr('data-hex', r.toString(16).toUpperCase())
+						.attr('data-bin', r.toString(2))
+						.attr('data-neg', neg)
+						//.attr('data-oct', r.toString(8))
+						.addClass('int');
+				} else {
+					item.addClass('real').attr('data-real', r.toString());
+				}
+				break;
+			case vtString:
+				item.addClass('str').text(r.value);
+				break;
+			case vtFunction:
+				item.addClass('str').text("<funtion> "+r.value.dspt);
+				break;
+			default:
+				item.addClass('error').text( 'Not supported type: ' +r.type + ' = (' + r.value + ')' );
 		}
 		txt.append(item);
 		updateResultUI(item);
 	}
 	catch (e) {
-		txt.append( $("<span>").addClass('result').addClass('error').append(e) );
+		txt.append( $("<pre>").addClass('result').addClass('error').append(e) );
 	}
 	tm = Date.now() - tm;
 	console.log(tm + "ms");
@@ -244,7 +259,7 @@ function calc()
 
 function updateAllResultUI()
 {
-	updateResultUI($('span.result'));
+	updateResultUI($('.result'));
 }
 
 function changeIntSeparator()
@@ -252,7 +267,7 @@ function changeIntSeparator()
 	intScale.use = $('#IntSep').hasClass('down');
 	intScale.width = $('#IntSepWidth').val()|0;
 	intScale.char = $('#IntSeparator').val();
-	updateResultUI($('span.result.int'));
+	updateResultUI($('.result.int'));
 }
 
 function changeRealSeparator()
@@ -260,7 +275,7 @@ function changeRealSeparator()
 	realOpt.use = $('#RealSep').hasClass('down');
 	realOpt.width = $('#RealSepWidth').val()|0;
 	realOpt.char = $('#RealSeparator').val();
-	updateResultUI($('span.result.real'));
+	updateResultUI($('.result.real'));
 }
 
 function updateResultUI(jqobj)
@@ -376,4 +391,9 @@ $(function () {
 	});
 
 	$('#Dec').click();
+
+	$('#Clear').offset( {
+		top: 	$('#calcResultsWrapper').offset().top + 3, 
+		left: 	$('#calcResultsWrapper').offset().left + $('#calcResults').outerWidth() - $('#Clear').outerWidth() - 1, 
+	});
 });

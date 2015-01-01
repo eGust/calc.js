@@ -14,12 +14,33 @@
 		func calc(symbols) => args = map(param.calc(symbols)), return op.calc(args)
 	
   todo:
-	FunctionExpr(Expression):
 	ArrayExpr(Expression):
-	UnitExpr(Expression):
 */
 
-function ValueExpr(str) {
+function ExprType(name)
+{
+	if (ExprType.prototype.newId == undefined)
+	{
+		var etId = 0, self = ExprType.prototype;
+		self.newId = function() {
+			return etId++;
+		}
+
+		self.toString = function() {
+			return 'ExprType{' + this.id + '}' +this.name;
+		}
+	}
+	if (!(this instanceof ExprType))
+        return new ExprType(name);
+
+    this.name = name;
+	this.id = this.newId();
+}
+
+const
+	etValue = ExprType('Value'), etIdentity = ExprType('Identity'), etOperator = ExprType('Operator'), etArray = ExprType('Array');
+
+function ValueExpr(str, isNumber) {
 	if (ValueExpr.prototype.calc == undefined) {
 		var self = ValueExpr.prototype;
 
@@ -30,34 +51,38 @@ function ValueExpr(str) {
 		self.toString = function() {
 			return "ValueExpr(" + this.value.toString() + ")";
 		};
+
+		self.type = etValue;
 	}
 
 	if (!(this instanceof ValueExpr))
-        return new ValueExpr(str);
+        return new ValueExpr(str, isNumber);
 
-    this.value = CalcLib.stringToValue(str);
+    this.value = isNumber ? CalcLib.parseNumber(str) : CalcLib.parseString(str);
     this.paramCount = 0;
     this.parameters = null;
 }
 
-function VariantExpr(str) {
-	if (VariantExpr.prototype.calc == undefined) {
-		var self = VariantExpr.prototype;
+function IdentityExpr(str) {
+	if (IdentityExpr.prototype.calc == undefined) {
+		var self = IdentityExpr.prototype;
 
 		self.calc = function(symbols) {
-			var symbol = symbols[this.vname];
-			if (symbol == undefined)
-				throw 'Can not find symbol: "' + this.vname + '"';
-			return symbol.getValue();
+			var valObj = symbols.get(this.vname);
+			if (valObj)
+				return valObj;
+			throw 'Can not find symbol: "' + this.vname + '"';
 		};
 
 		self.toString = function() {
-			return "VariantExpr(" + this.vname + ")";
+			return "IdentityExpr(" + this.vname + ")";
 		};
+
+		self.type = etIdentity;
 	}
 
-	if (!(this instanceof VariantExpr))
-        return new VariantExpr(str);
+	if (!(this instanceof IdentityExpr))
+        return new IdentityExpr(str);
 
     this.vname = str;
     this.paramCount = 0;
@@ -69,30 +94,11 @@ function OperatorExpr(op) {
 		var self = OperatorExpr.prototype;
 
 		self.calc = function(symbols) {
-			/*
-			var args = new Array(this.paramCount);
-			for (var i = 0; i < args.length; i++)
-				args[i] = this.parameters[i].calc(true);
-
-			//return this.op.calc(args, symbols);
-			var r = this.op.calc(this.parameters, symbols);
-
-			if (!symbols)
-			{
-				console.log(this+"")
-				for (var i = 0; i < args.length; i++)
-					console.log("  " + args[i]);
-				console.log(" = " + r);
-			}
-
-			return r;
-			/*/
 			var fnCalc = this.op.calc;
 			if (fnCalc)
 				return fnCalc(this.parameters, symbols);
 			
 			throw "Not supported calculation of: " + this.op;
-			// */
 		};
 
 		self.push = function(ve) {
@@ -129,6 +135,8 @@ function OperatorExpr(op) {
 			}
 			return r;
 		};
+
+		self.type = etOperator;
 	}
 
 	if (!(this instanceof OperatorExpr))

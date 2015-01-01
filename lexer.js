@@ -152,7 +152,10 @@ function Scanner(str) {
 						return;
 					}
 				} else if (c == quote)
+				{
+					++context.index;
 					break;
+				}
 			}
 			context.nextToken = tkString;
 		}

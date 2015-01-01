@@ -1,0 +1,141 @@
+<!doctype html>
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<meta name="viewport" content="width=device-width, height=device-height">
+	<title>About eCalculator</title>
+
+    <link rel="shortcut icon" href="calc.png" type="image/png">
+	<link type="text/css" rel="stylesheet" href="calc.css">
+</head>
+
+<body>
+	<div id="Caption">
+		<h2>eCalculator v0.3</h2>
+	<div>
+		<h3>Features</h3>
+		<div class="readme">
+			<ul>
+				Used MikeMcl's decimal.js library:
+				<li><a href='https://github.com/MikeMcl/decimal.js'>https://github.com/MikeMcl/decimal.js</a></li>
+				<br>
+				Basic Operations:
+				<li>Input expression, press ENTER or click the R button.</li>
+				<li>Press ESC to clear the input text.</li>
+				<li>Press UP/DOWN to select history input.</li>
+				<li>Click the result number to put it to input text.</li>
+
+				<br>
+				Numbers:
+				<li>Decimal by default.</li>
+				<li>Prefix 0b for binary.</li>
+				<li>Prefix 0x for hex.</li>
+				<li>Underscore _ can be in a number ( exp. 10_000 ).</li>
+
+				<br>
+				Currently supported operators
+				<li>
+					Basic: 
+<pre>
++ : Plus (&plus;)
+- : Minus (&minus;) 
+* : Times (&times;) 
+/ : Divide (&divide;) 
+% : Module
+</pre>
+				</li>
+				<li>
+					Extanded: 
+<pre>
+** : Power
+// : Integer Divide
+</pre>
+				</li>
+				<li>
+					Bitwise (integers only): 
+<pre>
+~ : Bitwise NOT
+&amp; : Bitwise AND
+| : Bitwise OR
+^ : Bitwise XOR
+</pre>
+				</li>
+				<li>
+					Logical (true = 1, false = 0): 
+<pre>
+! : Logical NOT
+&amp;&amp; : Logical  AND
+|| : Logical  OR
+</pre>
+				</li>
+				<li>
+					Relational (true = 1, false = 0): 
+<pre>
+== : Equal
+!= : Not equal
+&gt; : Greater than
+&lt; : Less than
+&gt;= : Greater than or Equal to
+&lt;= : Less than or Equal to
+</pre>
+				</li>
+				<li>
+					Quest (lazy version): 
+<pre>
+condition ? true value : false value
+for exp.
+  1 >= 2 ? 10 : 20  =>  20
+  1 ? 2 ? 3 : 4 : 5 ? 6 : 7  =  1 ? (2 ? 3 : 4) : (5 ? 6 : 7)
+</pre>
+				</li>
+
+				<lt>Operator Orders</lt>
+				<li>Use <code>(</code> and <code>)</code> to promote orders.
+<pre>
+1	**
+2	* / % //
+3	+ -
+4	~ &amp; | ^
+5	! &amp;&amp; ||
+6	== != &gt; &lt; &gt;= &lt;=
+7	? :
+</pre>
+				</li>
+				<lt>Variable, Constants and Functions</lt>
+				<li>
+					Assign Variable: 
+<pre>
+=	a = ...
+a = b = 3	=>	a = (b = 3)
+a = 1 + (b = 2)	=> a = 3, b = 2
+[*] A variable could be assigned to a function.
+</pre>
+				</li>
+				<li>
+					Constants: 
+<pre>
+E:	2.7182818...
+PI:	3.1415926...
+</pre>
+				</li>
+				<li>
+					Functions: 
+<pre>
+ln:	log based on E
+lg lg10 log10:	log based on 10
+lg2 log2:	log based on 2
+log:	log(number, base)
+sin, cos, tan/tg, ctan/ctg:	Triangle functions
+</pre>
+				</li>
+			</ul>
+			<a href="https://github.com/eGust/calc.js">https://github.com/eGust/calc.js</a>
+			<h2>Author</h2>
+			<p>
+				eGust<br>
+				egustc@gmail.com<br>
+			</p>
+		</div>
+	</div>
+</body>
+</html>
