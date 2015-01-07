@@ -167,7 +167,7 @@ function getCalculatorLibrary() {
 		throw "Out of range: " + v;
 	}
 
-	function extandHex(v, idx)
+	function extendHex(v, idx)
 	{
 		var hs = v.isNeg() ? v.plus(bitHolders.pos[idx]).toString(16) : v.toString(16);
 		return Zeros.substr(0, bitHolders.hcount[idx] - hs.length) + hs;
@@ -194,7 +194,7 @@ function getCalculatorLibrary() {
 	r.negate = function(v1) { checkArgsDecimal(v1); return ValueObject(v1.value.neg(), vtNumber); };	// -
 	r.bitNot = function(v1) { // ~
 		checkArgsDecimal(v1);
-		var h1 = extandHex(v1.value, getHexCountIndex(v1)), hr = '';
+		var h1 = extendHex(v1.value, getHexCountIndex(v1.value)), hr = '';
 		for (var i in h1)
 			hr = hr + hexBitOps.NOT[h1[i]];
 		return ValueObject(new Decimal(hr, 16), vtNumber); 
@@ -230,12 +230,12 @@ function getCalculatorLibrary() {
 	{
 		checkArgsDecimal(v1, v2); 
 		var idx = Math.max(getHexCountIndex(v1.value), getHexCountIndex(v2.value)), 
-			h1 = extandHex(v1.value, idx), h2 = extandHex(v2.value, idx), hr = '';
+			h1 = extendHex(v1.value, idx), h2 = extendHex(v2.value, idx), hr = '';
 
 		for (var i in h1)
 			hr = hr + map[h1[i]][h2[i]];
 		return ValueObject(new Decimal(hr, 16), vtNumber); 
-	}
+	};
 
 	r.bitAnd	= function(v1, v2) { checkArgsDecimal(v1, v2); return bitCalc(v1, v2, hexBitOps.AND); }; // &
 	r.bitOr		= function(v1, v2) { checkArgsDecimal(v1, v2); return bitCalc(v1, v2, hexBitOps.OR);  }; // |
@@ -251,54 +251,14 @@ function getCalculatorLibrary() {
 	r.logicAnd	= function(a1, a2, sbt) { var v1 = a1.calc(sbt); return v1.toLogic() ? a2.calc(sbt) : Decimal.ValueZero;	};	// &&
 	r.logicOr	= function(a1, a2, sbt) { var v1 = a1.calc(sbt); return v1.toLogic() ? v1 : a2.calc(sbt);	};	// ||
 
-	r.quest = function(v1, a1, a2, sbt) { return v1.toLogic() ? a2.calc(sbt) : a1.calc(sbt); };
+	r.quest = function(v1, a1, a2, sbt) { return v1.toLogic() ? a1.calc(sbt) : a2.calc(sbt); };
 	r.assign = function(a1, v2, sbt) {
 		if (a1.type != etIdentity)
 			throw a1 + " is not an Identity.";
 		if ( !sbt.put(a1.vname, v2) )
 			throw a1 + " is not a valid identity.";
 		return v2;
-	}
-
-	r.ln = function(v1) { checkArgsDecimal(v1); return ValueObject(Decimal.ln(v1.value), vtNumber); }
-	r.log10 = function(v1) { checkArgsDecimal(v1); return ValueObject(Decimal.log(v1.value), vtNumber); }
-	r.log2 = function(v1) { checkArgsDecimal(v1); return ValueObject(Decimal.log(v1.value, Decimal.TWO), vtNumber); }
-	r.log = function(v1, v2) { checkArgsDecimal(v1, v2); return ValueObject(Decimal.log(v1.value, v2.value), vtNumber); }
-
-	r.len = function(v1) {
-		if (v1.isString())
-			return ValueObject(new Decimal(v1.value.length), vtNumber); 
-		if (v1.isNumber())
-			return ValueObject(new Decimal(v1.value.toString(10).length), vtNumber); 
-	}
-
-	const PI_2 = Math.PI / 2;
-
-	r.sin = function(v1) {
-		checkArgsDecimal(v1);
-		var v = Math.sin(v1.value.mod(Decimal.PI_2).toNumber());
-		if (Math.abs(v) < 1e-15)
-			v = 0;
-		return ValueObject(new Decimal(v+""), vtNumber);
-	}
-
-	r.cos = function(v1) {
-		checkArgsDecimal(v1);
-		var v = Math.cos(v1.value.mod(Decimal.PI_2).toNumber());
-		return ValueObject(new Decimal(v+""), vtNumber);
-	}
-
-	r.tan = function(v1) {
-		checkArgsDecimal(v1);
-		var v = Math.tan(v1.value.mod(Decimal.PI).toNumber());
-		return ValueObject(new Decimal(v+""), vtNumber);
-	}
-
-	r.ctan = function(v1) {
-		checkArgsDecimal(v1);
-		var v = Math.tan(v1.value.mod(Decimal.PI).toNumber());
-		return ValueObject(new Decimal(1/v+""), vtNumber);
-	}
+	};
 
 	r.callFunction = function(params, sbt) {
 		if (params.length == 0)
@@ -317,7 +277,72 @@ function getCalculatorLibrary() {
 			throw "Not matched arguments: " + fn.paramCount + "excepted, but given " + args.length;
 
 		return fn.exec.apply(fn, args);
-	}
+	};
+
+	// functions
+	r.abs = function(v1) { checkArgsDecimal(v1); return ValueObject(v1.value.abs(), vtNumber); };
+
+	r.ln = function(v1) { checkArgsDecimal(v1); return ValueObject(Decimal.ln(v1.value), vtNumber); };
+	r.log10 = function(v1) { checkArgsDecimal(v1); return ValueObject(Decimal.log(v1.value), vtNumber); };
+	r.log2 = function(v1) { checkArgsDecimal(v1); return ValueObject(Decimal.log(v1.value, Decimal.TWO), vtNumber); };
+	r.log = function(v1, v2) { checkArgsDecimal(v1, v2); return ValueObject(Decimal.log(v1.value, v2.value), vtNumber); };
+
+	r.len = function(v1) {
+		if (v1.isString())
+			return ValueObject(new Decimal(v1.value.length), vtNumber); 
+		if (v1.isNumber())
+			return ValueObject(new Decimal(v1.value.toString(10).length), vtNumber); 
+	};
+
+	const PI_2 = Math.PI / 2;
+
+	r.sin = function(v1) {
+		checkArgsDecimal(v1);
+		var v = Math.sin(v1.value.mod(Decimal.PI_2).toNumber());
+		if (Math.abs(v) < 1e-15)
+			v = 0;
+		return ValueObject(new Decimal(v+""), vtNumber);
+	};
+
+	r.cos = function(v1) {
+		checkArgsDecimal(v1);
+		var v = Math.cos(v1.value.mod(Decimal.PI_2).toNumber());
+		return ValueObject(new Decimal(v+""), vtNumber);
+	};
+
+	r.tan = function(v1) {
+		checkArgsDecimal(v1);
+		var v = Math.tan(v1.value.mod(Decimal.PI).toNumber());
+		return ValueObject(new Decimal(v+""), vtNumber);
+	};
+
+	r.ctan = function(v1) {
+		checkArgsDecimal(v1);
+		var v = Math.tan(v1.value.mod(Decimal.PI).toNumber());
+		return ValueObject(new Decimal(1/v+""), vtNumber);
+	};
+
+	r.ord = function(v1) {
+		checkArgsString(v1);
+		if (v1.length == 0)
+			throw "Can not use ord function on an empty string.";
+		return ValueObject(new Decimal(v1.value.charCodeAt(0)), vtNumber);
+	};
+
+	r.ord = function(v1) {
+		checkArgsString(v1);
+		if (v1.length == 0)
+			throw "Can not use ord function on an empty string.";
+		return ValueObject(new Decimal(v1.value.charCodeAt(0)), vtNumber);
+	};
+
+	r.chr = function(v1) {
+		checkArgsDecimal(v1);
+		var v = v1.value;
+		if ((!v.isInt()) || v.lte(Decimal.ZERO))
+			throw v + " is not in valid char code range.";
+		return ValueObject(String.fromCharCode(v.toNumber()), vtString);
+	};
 
 	return r;
 }
@@ -358,6 +383,12 @@ function registerGlobalSymbols()
 	gs.put("PI", ValueObject(Decimal.PI, vtNumber));
 	gs.put("E",  ValueObject(Decimal.E, vtNumber));
 	
+	gs.put('abs', ValueObject({
+			exec: CalcLib.abs,
+			paramCount: 1,
+			dspt: 'Absolute value.',
+		}, vtFunction));
+
 	gs.put('ln', ValueObject({
 			exec: CalcLib.ln,
 			paramCount: 1,
@@ -390,6 +421,17 @@ function registerGlobalSymbols()
 	gs.put('tg', tg);
 	gs.put('ctan', ctg);
 	gs.put('ctg', ctg);
+
+	gs.put('ord', ValueObject({
+				exec: CalcLib.ord,
+				paramCount: 1,
+				dspt: 'ord(string), get the code of first char of the input string',
+			}, vtFunction));
+	gs.put('chr', ValueObject({
+				exec: CalcLib.chr,
+				paramCount: 1,
+				dspt: 'chr(int), code to char',
+			}, vtFunction));
 }
 
 registerGlobalSymbols();

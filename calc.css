@@ -5,7 +5,12 @@
 }
 
 body {
-	background-color: #def;
+	background-color: #222;
+	color: white;
+}
+
+a {
+	color: #f80 !important;
 }
 
 ul {
@@ -17,7 +22,6 @@ ul {
 
 li {
 	margin-bottom: 10px;
-	text-align: -webkit-match-parent;
 	font-family: courier, monospace; 
 	font-size: 14px;
 	word-wrap: break-word;
@@ -32,11 +36,15 @@ li {
 }
 
 .result.int {
-	color: blue;
+	color: #f80;
 }
 
 .result.real {
-	color: green;
+	color: lime;
+}
+
+.result.str {
+	color: yellow;
 }
 
 .result.error {
@@ -48,9 +56,9 @@ li {
 #calcResultsWrapper {
 	position: relative; margin: 1px 8px;
 	font-family: courier, monospace; 
-	background-color: #FFC;
-	border: solid lime 1px;
-	box-shadow: 0px 0px 3px green;
+	background-color: #444;
+	border: solid #ddd 1px;
+	box-shadow: 0px 0px 3px yellow;
 	overflow:auto;
 	width: 480px;
 	height: 300px;
@@ -68,19 +76,21 @@ li {
 	margin: 0;
 	padding-left: 22px;
 	font-family: courier, monospace; 
+	font-size: 14px;
 
 	height: 22px;
 	line-height: 22px;
-
-	border: solid rgba(82, 168, 236, 0.8) 1px;
-	color: #555;
-	background-color: #EEE;
 	width: 480px;
+
+	border: solid #ddd 1px;
+	color: #f80;
+	background-color: #444;
 }
 
 #calcInput:focus {
-	border-color: orange;
-	background-color: #FEB;
+	border: solid #f80 2px;
+	background-color: black;
+	color: white;
 	box-shadow: 0px 0px 3px yellow;
 }
 
@@ -137,14 +147,24 @@ h2 {
 }
 
 #calcExprBtn {
-	color: lime;
-	background-color: navy;
+	color: #222;
+	background-color: #f80;
+}
+
+#calcExprBtn:hover {
+	color: white;
+	font-weight: bold;
+}
+
+pre.result {
+	margin-top: 5px;
+	margin-bottom: 0;
 }
 
 .button {
-	border: 1px solid black;
-	background-color: #eee;
-	color: navy;
+	background-color: #f80;
+	border: 1px solid white;
+	color: white;
 	font-weight: bold;
 	font-size: 10pt;
 	padding: 2px 5px 2px 5px;
@@ -159,29 +179,19 @@ h2 {
 	user-select: none;
 }
 
-select {
-	width: 35px;
-}
-
-pre.result {
-	margin-top: 5px;
-	margin-bottom: 0;
-}
-
 .button.down {
-	border-color: lime;
+	border-color: #f80;
 	background-color: black;
 	color: white;
 }
 
 .button:hover {
-	background-color: #ffd;
-	color: blue;
+	color: black;
 }
 
 .button.down:hover {
-	background-color: #444;
-	color: #ddd;
+	background-color: #222;
+	color: yellow;
 }
 
 .button.down.grouped:hover {
@@ -189,9 +199,9 @@ pre.result {
 }
 
 #Clear {
-	position: fixed;
-	top: 2px;
-	left: 400px;
+	position: absolute;
+	top: 84px;
+	left: 425px;
 }
 
 .readme {
@@ -216,9 +226,9 @@ pre.result {
 }
 
 .group {
-	border: 1px solid black;
-	color: black;
-	background-color: white;
+	border: 1px solid white;
+	color: #f80;
+	background-color: #444;
 	font-size: 10pt;
 	padding: 2px 5px 2px 5px;
 	display: inline-block;
@@ -226,8 +236,25 @@ pre.result {
 	cursor: default;
 }
 
+.group > select {
+	border: 1px solid white;
+	border-radius: 3px;
+	color: #222;
+	background-color: #f80;
+	width: 40px;
+}
+
 .right-top {
 	position: absolute;
 	top: 0px;
 	right: 0px;
+}
+
+.changeLog {
+	border: 1px solid white;
+	color: #f80;
+	background-color: #444;
+	padding: 2px 5px 2px 5px;
+	text-align: left;
+	cursor: default;
 }

@@ -5,7 +5,7 @@
 	<meta name="viewport" content="width=device-width, height=device-height">
 	<title>Excellent Calculator</title>
 
-    <link rel="shortcut icon" href="calc.png" type="image/png">
+    <link rel="shortcut icon" href="icons/calc32.png" type="image/png">
 	<link type="text/css" rel="stylesheet" href="calc.css">
 
 	<script type="text/javascript" src="libs/jquery.min.js"></script>
@@ -15,19 +15,19 @@
 	<script type="text/javascript" src="calclib.js"></script>
 	<script type="text/javascript" src="exprs.js"></script>
 	<script type="text/javascript" src="parser.js"></script>
-	<script type="text/javascript" src="debug.js"></script>
-	<script type="text/javascript" src="ui.js"></script>
+	<script type="text/javascript" src="calcUI.js"></script>
+	<!-- <script type="text/javascript" src="debug.js"></script> -->
 </head>
 
 <body>
 	<div id="Caption">
-		<h2>eCalculator v0.3</h2>
+		<h2>eCalculator v0.4</h2>
 		<a target="_blank" href="about.html" class="right-top">About</a>
 		<div id="Options">
 			<span class="group">
 				<b>Int</b>
-				<span class="button grouped" id="Dec" data-scale="dec" data-group="styles">dec</span><span class="button grouped" id="Hex" data-scale="hex" data-group="styles">hex</span><span class="button grouped" id="Bin" data-scale="bin" data-group="styles">bin</span>
-				<span class="button" id="IntSep" data-button-style="Downable">Sep</span>
+				<span class="button grouped" id="Dec" data-scale="dec" data-group="styles" title="Decimal">10</span><span class="button grouped" id="Hex" data-scale="hex" data-group="styles" title="Hex">16</span><span class="button grouped" id="Bin" data-scale="bin" data-group="styles" title="Binary">2</span>
+				<span class="button" id="IntSep" data-button-style="Downable" title="Separator">x,x</span>
 				<select id="IntSeparator">
 				    <option>_</option>
 				    <option>,</option>
@@ -43,10 +43,9 @@
 				    <option>9</option>
 				</select>
 			</span>
-			|
 			<span class="group">
 				<b>Real</b>
-				<span class="button" id="RealSep" data-button-style="Downable">Sep</span>
+				<span class="button" id="RealSep" data-button-style="Downable" title="Separator">x,x</span>
 				<select id="RealSeparator">
 				    <option>_</option>
 				    <option selected="true">,</option>
@@ -67,12 +66,14 @@
 
 	<div id="calcResultsWrapper">						
 		<ul id="calcResults"></ul>
-		<span class="button" id="Clear">Clear</span>
 	</div>
+	<span class="button" id="Clear" title="Clear">Clear</span>
 
 	<div id="calcInputWrapper">
 		<input type="text" id="calcInput" spellcheck="false">
-		<div id="calcExprBtn" class="vButton">R</div>
+		<div id="calcExprBtn" class="vButton" title="Calculate!">R</div>
 	</div>
+
+	<div id="debugInfo"></div>
 </body>
 </html>

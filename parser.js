@@ -208,7 +208,7 @@ function Parser(scanner)
 				return true;
 			}
 
-			const SoloSimples = "+ - ~ !".split(" "), DuoSimples = "** * / % //  + - & | ^  == != > >= > >=  && ||".split(" ");
+			const SoloSimples = "+ - ~ !".split(" "), DuoSimples = "** * / % //  + - & | ^  == != > >= < <=  && ||".split(" ");
 
 			for (var i in SoloSimples)
 			{
@@ -385,7 +385,13 @@ function Parser(scanner)
 					case tkOperator: 
 						var op = curScope == scpOperator ? setOperator[str] : setValue[str];
 						if (op == undefined)
-							throw "Invalid Operator: " + str;
+						{
+							if (str == ')' && stackExpr.cur().op === opFunction)
+							{
+								op = setValue[str];
+							} else
+								throw "Invalid Operator: " + str;
+						}
 
 						if (!op.stackModifier)
 							throw "Not supported operator: " + op;

@@ -5,13 +5,16 @@
 	<meta name="viewport" content="width=device-width, height=device-height">
 	<title>About eCalculator</title>
 
-    <link rel="shortcut icon" href="calc.png" type="image/png">
+    <link rel="shortcut icon" href="icons/calc32.png" type="image/png">
 	<link type="text/css" rel="stylesheet" href="calc.css">
+
+	<script type="text/javascript" src="libs/jquery.min.js"></script>
+	<script type="text/javascript" src="aboutUI.js"></script>
 </head>
 
 <body>
 	<div id="Caption">
-		<h2>eCalculator v0.3</h2>
+		<h2>eCalculator v0.4</h2>
 	<div>
 		<h3>Features</h3>
 		<div class="readme">
@@ -121,11 +124,13 @@ PI:	3.1415926...
 				<li>
 					Functions: 
 <pre>
+abs:	absolute value
 ln:	log based on E
 lg lg10 log10:	log based on 10
 lg2 log2:	log based on 2
 log:	log(number, base)
 sin, cos, tan/tg, ctan/ctg:	Triangle functions
+ord/chr:	convert between char and code.
 </pre>
 				</li>
 			</ul>
@@ -136,6 +141,10 @@ sin, cos, tan/tg, ctan/ctg:	Triangle functions
 				egustc@gmail.com<br>
 			</p>
 		</div>
+	</div>
+	<div class="changeLog" style="display: none">
+		<span class="button" data-button-style="Downable" title="Change Log" id="btnChangeLog">Change Log</span>
+		<div id="changeLog" style="display: none"></div>
 	</div>
 </body>
 </html>

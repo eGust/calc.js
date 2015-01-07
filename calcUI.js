@@ -158,7 +158,7 @@ var inputHistory = Deque(), parser = Parser(Scanner()), symbols = SymbolStack(),
 			'dec': { 'scale': 'dec', 'width': 3, 'char': ',', 'prefix': '', 'use': false, },
 			'hex': { 'scale': 'hex', 'width': 4, 'char': '_', 'prefix': '0x', 'use': false, },
 			//'oct': { 'scale': 'oct', 'width': 4, 'char': '_', 'use': false, },
-			'bin': { 'scale': 'bin', 'width': 8, 'char': '_', 'prefix': '0b', 'use': false, },
+			'bin': { 'scale': 'bin', 'width': 8, 'char': '_', 'prefix': '0b', 'use': true, },
 		},
 	realOpt = { 'scale': 'real', 'width': 3, 'char': ',', 'prefix': '', 'use': false, },
 	intScale = null;
@@ -166,12 +166,14 @@ var inputHistory = Deque(), parser = Parser(Scanner()), symbols = SymbolStack(),
 function clearInput()
 {
 	$("#calcInput").val("");
+	$('#calcInput').focus();
 }
 
 function clearOutput()
 {
 	$('#calcResults').text('');
 	inputHistory.clear();
+	$('#calcInput').focus();
 }
 
 function changeIntegerScale(scale)
@@ -206,7 +208,7 @@ function calc()
 	var txt = $("<li>").append(expr);
 	$("#calcResults").append(txt);
 
-	var tm = Date.now();
+	//var tm = Date.now();
 	parser.scanner.reset(expr);
 	try {
 		var r = parser.parse().calc(symbols),
@@ -251,8 +253,8 @@ function calc()
 	catch (e) {
 		txt.append( $("<pre>").addClass('result').addClass('error').append(e) );
 	}
-	tm = Date.now() - tm;
-	console.log(tm + "ms");
+	//tm = Date.now() - tm;
+	//console.log(tm + "ms");
 
 	$("#calcResultsWrapper").scrollTop($("#calcResultsWrapper")[0].scrollHeight);
 }
@@ -308,16 +310,37 @@ function updateResultUI(jqobj)
 			return;
 		item.text(s);
 	});
+	$('#calcInput').focus();
 }
 
 $(function () {
-	$('#calcInput').focus();
+	$('.button[data-button-style="Downable"]').click(function() {
+		var btn = $(this);
+		if (btn.hasClass('down'))
+		{
+			btn.removeClass('down');
+		} else {
+			btn.addClass('down');
+		}
+	});
+
+	$('#Clear').offset( {
+		top: 	$('#calcResultsWrapper').offset().top + 3, 
+		left: 	$('#calcResultsWrapper').offset().left + $('#calcResults').outerWidth() - $('#Clear').outerWidth() - 1, 
+	});
+
+	$('.button.grouped').click(function() {
+		var e = $(this);
+		if (e.hasClass('down'))
+			return;
+
+		var grp = e.attr('data-group');
+		$('*[data-group="'+grp+'"]').removeClass('down');
+		e.addClass('down');
+		changeIntegerScale(e.attr('data-scale'));
+	});
 
 	$('#calcExprBtn').click(calc);
-
-	$('#ReadMe').click(function() {
-		$('.readme').toggle();
-	});
 
 	$('#Clear').click(clearOutput);
 
@@ -348,52 +371,20 @@ $(function () {
 
 	});
 
-	$('.button.grouped').click(function() {
-		var btn = $(this);
-		if (btn.hasClass('down'))
-			return;
-
-		$('.button[data-group]').removeClass('down');
-		btn.addClass('down');
-		changeIntegerScale(btn.attr('data-scale'));
-	});
-
-	$('.button[data-button-style="Downable"]').click(function() {
-		var btn = $(this);
-		if (btn.hasClass('down'))
-			btn.removeClass('down');
-		else
-			btn.addClass('down');
-	});
-
 	$('#IntSep').click(changeIntSeparator);
 
-	$('#IntSeparator').change(function () {
-		$('#IntSep').addClass('down');
-		changeIntSeparator();
-	});
-
-	$('#IntSepWidth').change(function () {
+	$('#IntSeparator,#IntSepWidth').change(function () {
 		$('#IntSep').addClass('down');
 		changeIntSeparator();
 	});
 
 	$('#RealSep').click(changeRealSeparator);
 
-	$('#RealSeparator').change(function () {
-		$('#RealSep').addClass('down');
-		changeRealSeparator();
-	});
-
-	$('#RealSepWidth').change(function () {
+	$('#RealSeparator,#RealSepWidth').change(function () {
 		$('#RealSep').addClass('down');
 		changeRealSeparator();
 	});
 
 	$('#Dec').click();
-
-	$('#Clear').offset( {
-		top: 	$('#calcResultsWrapper').offset().top + 3, 
-		left: 	$('#calcResultsWrapper').offset().left + $('#calcResults').outerWidth() - $('#Clear').outerWidth() - 1, 
-	});
+	$('#calcInput').focus();
 });

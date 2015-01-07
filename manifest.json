@@ -3,12 +3,11 @@
 
   "name": "Excellent Calculator",
   "description": "A powerful calculator.",
-  "version": "0.2",
-  "version_name": "0.2 beta",
+  "version": "0.3",
   "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'",
 
   "browser_action": {
-    "default_icon": "calc.png",
+    "default_icon": "./icons/calc.png",
     "default_popup": "index.html"
   },
   
