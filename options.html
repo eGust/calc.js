@@ -1,0 +1,118 @@
+<!doctype html>
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+	<meta name="viewport" content="width=device-width, height=device-height">
+	<title>eCalculator Options</title>
+
+    <link rel="shortcut icon" href="icons/calc32.png" type="image/png">
+	<link type="text/css" rel="stylesheet" href="calc.css">
+
+	<script type="text/javascript" src="libs/jquery.min.js"></script>
+	<script type="text/javascript" src="settings.js"></script>
+	<script type="text/javascript" src="optionsUI.js"></script>
+</head>
+
+<body>
+	<div id="Caption">
+		<h2>eCalculator Options</h2>
+	</div>
+	<div>
+		<div id="storage">
+			<br>
+			<div class="group">
+				<span class="caption">Integer</span>
+				<span class="button grouped" data-scale="dec" data-group="styles" title="Decimal">Decimal</span>
+				<span class="button grouped" data-scale="hex" data-group="styles" title="Hex">Hex</span>
+				<span class="button grouped" data-scale="bin" data-group="styles" title="Binary">Binary</span>
+			</div><br><br>
+			<div class="group sep" id="dec">
+				<span class="caption">Decimal</span>
+				<span class="button use" data-button-style="Downable" title="Separator">Use Separator</span>
+				<select data-type="char">
+				    <option>_</option>
+				    <option selected="true">,</option>
+				</select>
+				<select data-type="width">
+				    <option>2</option>
+				    <option selected="true">3</option>
+				    <option>4</option>
+				    <option>5</option>
+				    <option>6</option>
+				    <option>7</option>
+				    <option>8</option>
+				    <option>9</option>
+				</select>
+			</div><br><br>
+			<div class="group sep" id="hex">
+				<span class="caption">Hex</span>
+				<span class="button use" data-button-style="Downable" title="Separator">Use Separator</span>
+				<select data-type="char">
+				    <option>_</option>
+				    <option selected="true">,</option>
+				</select>
+				<select data-type="width">
+				    <option>2</option>
+				    <option selected="true">3</option>
+				    <option>4</option>
+				    <option>5</option>
+				    <option>6</option>
+				    <option>7</option>
+				    <option>8</option>
+				    <option>9</option>
+				</select>
+			</div><br><br>
+			<div class="group sep" id="bin">
+				<span class="caption">Binary</span>
+				<span class="button use" data-button-style="Downable" title="Separator">Use Separator</span>
+				<select data-type="char">
+				    <option>_</option>
+				    <option selected="true">,</option>
+				</select>
+				<select data-type="width">
+				    <option>2</option>
+				    <option selected="true">3</option>
+				    <option>4</option>
+				    <option>5</option>
+				    <option>6</option>
+				    <option>7</option>
+				    <option>8</option>
+				    <option>9</option>
+				</select>
+			</div><br><br>
+			<div class="group sep" id="real">
+				<span class="caption">Real</span>
+				<span class="button use" data-button-style="Downable" title="Separator">Use Separator</span>
+				<select data-type="char">
+				    <option>_</option>
+				    <option selected="true">,</option>
+				</select>
+				<select data-type="width">
+				    <option>2</option>
+				    <option selected="true">3</option>
+				    <option>4</option>
+				    <option>5</option>
+				    <option>6</option>
+				    <option>7</option>
+				    <option>8</option>
+				    <option>9</option>
+				</select>
+			</div><br><br>
+
+		</div>
+
+		<span class="button" id="reset">Reset to Default</span> <span class="button" id="clear">Clear History</span><br><br>
+
+		<div class="group" id="history">
+			<span class="caption">History</span>
+			<span class="group max">
+				<span class="caption">Max Count</span>
+				<select id="MaxCount">
+				</select>
+			</span><br>
+			<div class="history">
+			</div>
+		</div><br><br>
+	</div>
+</body>
+</html>

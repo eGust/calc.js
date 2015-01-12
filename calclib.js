@@ -169,7 +169,7 @@ function getCalculatorLibrary() {
 
 	function extendHex(v, idx)
 	{
-		var hs = v.isNeg() ? v.plus(bitHolders.pos[idx]).toString(16) : v.toString(16);
+		var hs = v.isNeg() ? v.plus(bitHolders.pos[idx]).plus(Decimal.ONE).toString(16) : v.toString(16);
 		return Zeros.substr(0, bitHolders.hcount[idx] - hs.length) + hs;
 	}
 
@@ -344,6 +344,34 @@ function getCalculatorLibrary() {
 		return ValueObject(String.fromCharCode(v.toNumber()), vtString);
 	};
 
+	r.signed = function(v1) {
+		checkArgsDecimal(v1);
+		if (v1.value.isNeg())
+			return v1;
+		var h1 = extendHex(v1.value, getHexCountIndex(v1.value.minus(Decimal.ONE))), hr = '';
+		switch (h1[0]) {
+			case '8': case '9': 
+			case 'A': case 'B': case 'C': 
+			case 'D': case 'E': case 'F':
+			case 'a': case 'b': case 'c': 
+			case 'd': case 'e': case 'f':
+				for (var i in h1)
+					hr = hr + hexBitOps.NOT[h1[i]];
+				return ValueObject((new Decimal(hr, 16)).plus(Decimal.ONE).neg(), vtNumber); 
+			default:
+				return v1; 
+		}
+	};
+
+	r.unsigned = function(v1) {
+		checkArgsDecimal(v1);
+		if (v1.value.isNeg()) {
+			var h1 = extendHex(v1.value, getHexCountIndex(v1.value));
+			return ValueObject((new Decimal(h1, 16)), vtNumber); 
+		}
+		return v1;
+	};
+
 	return r;
 }
 
@@ -431,6 +459,17 @@ function registerGlobalSymbols()
 				exec: CalcLib.chr,
 				paramCount: 1,
 				dspt: 'chr(int), code to char',
+			}, vtFunction));
+
+	gs.put('signed', ValueObject({
+				exec: CalcLib.signed,
+				paramCount: 1,
+				dspt: 'signed(int), convert to signed',
+			}, vtFunction));
+	gs.put('unsigned', ValueObject({
+				exec: CalcLib.unsigned,
+				paramCount: 1,
+				dspt: 'unsigned(int), convert to unsigned',
 			}, vtFunction));
 }
 

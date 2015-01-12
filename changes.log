@@ -1,3 +1,10 @@
+[0.5]
++ support input history (uses localStorage)
++ Options
++ functions: signed, unsigned
+! fixed: negative integer bitwise operators bug.
+* UI changes
+
 [0.4]
 + functions: abs, ord, chr
 ! fixed: ~ < <= ?: operators bug

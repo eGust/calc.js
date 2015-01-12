@@ -356,6 +356,7 @@ function Parser(scanner)
 				stkOp.changeCurrentParameter(curOp);
 				stackExpr.push(curOp);
 				stackScope.curScope = scpOperator;
+				stackExpr.containAssign = true;
 				return true;
 			}
 
@@ -373,6 +374,8 @@ function Parser(scanner)
 			opGaurd.modifyStacks(stackExpr, stackScope);
 
 			var round = 0;
+			stackExpr.result = opGaurd;
+			stackExpr.containAssign = false;
 
 			while (scanner.next())
 			{
@@ -445,7 +448,9 @@ function Parser(scanner)
 			if (stackScope.curScope != scpValue)
 				throw 'The expression is not completed!';
 
-			return opGaurd.parameters[0];
+			var r = opGaurd.parameters[0];
+			r.assign = stackExpr.containAssign;
+			return r;
 		}
 
 	}
