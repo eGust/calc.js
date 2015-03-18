@@ -2,7 +2,7 @@
 <html>
 <head>
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 	<title>Excellent Calculator</title>
 
     <link rel="shortcut icon" href="icons/calc32.png" type="image/png">
@@ -14,29 +14,35 @@
 	<script type="text/javascript" src="symbol.js"></script>
 	<script type="text/javascript" src="calclib.js"></script>
 	<script type="text/javascript" src="exprs.js"></script>
+	<script type="text/javascript" src="operators.js"></script>
 	<script type="text/javascript" src="parser.js"></script>
 	<script type="text/javascript" src="settings.js"></script>
 	<script type="text/javascript" src="calcUI.js"></script>
-	<!-- <script type="text/javascript" src="debug.js"></script> -->
+	<!-- <script type="text/javascript" src="test.js"></script> -->
+	<script type="text/javascript" src="test.js"></script>
 </head>
 
 <body>
 	<div id="Caption">
-		<h2>eCalculator v0.5</h2>
+		<h2>eCalculator v0.6</h2>
 		<a target="_blank" href="options.html" class="second-right-top">Options</a>
 		<a target="_blank" href="about.html" class="right-top">About</a>
 		<div id="Options">
 			<span class="group">
 				<b>Int</b>
-				<span class="button grouped" data-scale="dec" data-group="styles" title="Decimal">10</span><span class="button grouped" data-scale="hex" data-group="styles" title="Hex">16</span><span class="button grouped" data-scale="bin" data-group="styles" title="Binary">2</span>
-				<span class="button" id="IntSep" data-button-style="Downable" title="Separator">x,x</span>
+				<span class="float-left">
+					<span class="button grouped" data-scale="dec" data-group="styles" title="Decimal">10</span>
+					<span class="button grouped" data-scale="hex" data-group="styles" title="Hex">16</span>
+					<span class="button grouped" data-scale="bin" data-group="styles" title="Binary">2</span>
+				</span>
+				<span class="downable button" id="IntSep" title="Separator">x,x</span>
 				<select id="IntSeparator">
 				    <option>_</option>
 				    <option>,</option>
 				</select>
 				<select id="IntSepWidth">
 				    <option>2</option>
-				    <option selected="true">3</option>
+				    <option selected="selected">3</option>
 				    <option>4</option>
 				    <option>5</option>
 				    <option>6</option>
@@ -47,14 +53,14 @@
 			</span>
 			<span class="group">
 				<b>Real</b>
-				<span class="button" id="RealSep" data-button-style="Downable" title="Separator">x,x</span>
+				<span class="downable button" id="RealSep" title="Separator">x,x</span>
 				<select id="RealSeparator">
 				    <option>_</option>
-				    <option selected="true">,</option>
+				    <option selected="selected">,</option>
 				</select>
 				<select id="RealSepWidth">
 				    <option>2</option>
-				    <option selected="true">3</option>
+				    <option selected="selected">3</option>
 				    <option>4</option>
 				    <option>5</option>
 				    <option>6</option>
@@ -65,21 +71,33 @@
 			</span>
 		</div>
 	</div>
-
-	<div id="calcResultsWrapper">						
-		<ul id="calcResults"></ul>
+	
+	<div class="relativePos">
+		<div id="calcResultsWrapper">						
+			<ul id="calcResults"></ul>
+		</div>
+		<!-- <span class="button" id="Clear" title="Clear">X</span> -->
+		<img src="./icons/bin-24.png" id="Clear" alt="Clear" title="Clear" width="22" height="24" />
 	</div>
-	<!-- <span class="button" id="Clear" title="Clear">X</span> -->
-	<img src="./icons/bin-24.png" id="Clear" alt="Clear" title="Clear" width="22" height="24" />
 
 	<div id="calcInputWrapper">
 		<form id="calcForm" autocomplete="off">
-			<input type="text" id="calcInput" spellcheck="false">
-			<input type="submit" id="calcExprBtn" value="C" class="vButton" title="Calculate!">
+			<input type="text" id="calcInput" placeholder="infix:" title="Infix Notation" spellcheck="false" />
+			<input type="submit" id="calcExprBtn" value="C" class="vButton" title="Calculate!" />
+			<span class="button-right" id="btnInsert">INS</span>
+			<div class="ins-menu" id="menuInsert">
+				<span class="ins-menu-item" data-insert="infix" title="Insert Infix Notation - #{IN:} [Ctrl+I]">Infix</span>
+				<span class="ins-menu-item" data-insert="postfix" title="Insert Postfix (RPN) - #{RPN:} [Ctrl+R]">Postfix</span>
+			</div>
 		</form>
 		<div class="historyButton">^</div>
 	</div>
-
-	<div id="debugInfo"></div>
+	
+	<div id="fireUpdateUI" style="display: none">
+		<div class="popup-buttons" id="sideButtons">
+			<span class="popup-item"><img id="btnRemove" src="./icons/remove-8.png" class="popup-item-img" alt="remove" title="remove" /></span>
+			<span class="popup-item"><img id="btnSelect" src="./icons/select-16.png" class="popup-item-img" alt="select" title="select" /></span>
+		</div>
+	</div>
 </body>
 </html>

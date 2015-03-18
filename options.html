@@ -22,10 +22,11 @@
 			<br>
 			<div class="group">
 				<span class="caption">Integer</span>
-				<span class="button grouped" data-scale="dec" data-group="styles" title="Decimal">Decimal</span>
-				<span class="button grouped" data-scale="hex" data-group="styles" title="Hex">Hex</span>
-				<span class="button grouped" data-scale="bin" data-group="styles" title="Binary">Binary</span>
+				<span class="button grouped" data-scale="dec" data-group="scale" title="Decimal">Decimal</span>
+				<span class="button grouped" data-scale="hex" data-group="scale" title="Hex">Hex</span>
+				<span class="button grouped" data-scale="bin" data-group="scale" title="Binary">Binary</span>
 			</div><br><br>
+
 			<div class="group sep" id="dec">
 				<span class="caption">Decimal</span>
 				<span class="button use" data-button-style="Downable" title="Separator">Use Separator</span>
@@ -44,6 +45,7 @@
 				    <option>9</option>
 				</select>
 			</div><br><br>
+
 			<div class="group sep" id="hex">
 				<span class="caption">Hex</span>
 				<span class="button use" data-button-style="Downable" title="Separator">Use Separator</span>
@@ -62,6 +64,7 @@
 				    <option>9</option>
 				</select>
 			</div><br><br>
+
 			<div class="group sep" id="bin">
 				<span class="caption">Binary</span>
 				<span class="button use" data-button-style="Downable" title="Separator">Use Separator</span>
@@ -80,6 +83,7 @@
 				    <option>9</option>
 				</select>
 			</div><br><br>
+
 			<div class="group sep" id="real">
 				<span class="caption">Real</span>
 				<span class="button use" data-button-style="Downable" title="Separator">Use Separator</span>
@@ -99,6 +103,15 @@
 				</select>
 			</div><br><br>
 
+			<div class="group">
+				<span class="caption">Notation</span>
+				<span class="button grouped" data-group="notation" data-notation="infix" title="Infix">Infix (Normal)</span>
+				<span class="button grouped" data-group="notation" data-notation="postfix" title="Reverse Polish Notation">Postfix (RPN)</span>
+				<p style="text-align: left; color: yellow;">
+					If you don't know what do they mean,<br>
+					just leave it to "<b style="color: white;">Infix</b>".
+				</p>
+			</div><br><br>
 		</div>
 
 		<span class="button" id="reset">Reset to Default</span> <span class="button" id="clear">Clear History</span><br><br>

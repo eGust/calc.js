@@ -8,12 +8,6 @@ $(function () {
 	});
 
 	$('.button[data-button-style="Downable"]').click(function() {
-		var btn = $(this);
-		if (btn.hasClass('down'))
-		{
-			btn.removeClass('down');
-		} else {
-			btn.addClass('down');
-		}
+		$(this).toggleClass('down');
 	});
 });

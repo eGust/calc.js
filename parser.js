@@ -4,64 +4,10 @@
 	
 	lexer.js
 	exprs.js
+	operators.js
 	symbol.js
 	calclib.js
-
-[classes]
-	Stack
-
-	Scope
-
-	Operator
 */
-
-function Scope(name)
-{
-	if (Scope.prototype.newScopeId == undefined)
-	{
-		var scopeId = 0, self = Scope.prototype;
-		self.newScopeId = function() {
-			return scopeId++;
-		}
-
-		self.toString = function() {
-			return "Scope{" + this.name + "(" + this.id + ")}";
-		}
-	}
-	if (!(this instanceof Scope))
-        return new Scope(name);
-
-    this.name = name;
-	this.id = this.newScopeId();
-}
-
-const
-	scpValue = Scope('Value'), scpOperator = Scope('Operator'), 
-	scpQuery = Scope('Query'), scpBracket = Scope('Bracket'), scpArray = Scope('Array');
-
-function Operator(str, name, rank, operand, fnCalc) {
-	if (Operator.prototype.modifyStacks == undefined)
-	{
-		var scopeId = 0, self = Operator.prototype;
-
-		self.newExpr = function() {
-			return OperatorExpr(this);
-		};
-
-		self.toString = function() {
-			return 'op' + this.name + '{"' + this.op + '" '+ this.operand + '}';
-		}
-	}
-	if (!(this instanceof Operator))
-        return new Operator(str, name, rank, operand, fnCalc);
-
-    this.op = str;
-    this.name = name;
-    this.rank = rank;
-    this.operand = operand;
-    this.calc = fnCalc; //function(args, symbols) {};
-    this.stackModifier = null;
-}
 
 function Stack()
 {
@@ -74,14 +20,11 @@ function Stack()
 		}
 
 		self.pop = function() {
-			if (this.count > 0)
-				--this.count;
+			return (this.count > 0) ? this.items[--this.count] : null;
 		}
 
 		self.cur = function() {
-			if (this.count == 0)
-				return undefined;
-			return this.items[this.count-1];
+			return (this.count > 0) ? this.items[this.count-1] : null;
 		}
 
 		self.toString = function() {
@@ -98,365 +41,329 @@ function Stack()
     this.count = 0;
 }
 
-function Parser(scanner)
-{
-	if (Parser.prototype.parse == undefined) {
-		var self = Parser.prototype;
+function InfixExprConstructor(scanner, stackScope) {
+	if (!(this instanceof InfixExprConstructor))
+        return new InfixExprConstructor(scanner, stackScope);
 
-		var setOperator = { }, setValue = { };
+	var opGaurd = operators.$GAURD.newExpr(), stackExpr = Stack(), stackScopeCount = stackScope.count;
+	opGaurd.modifyStacks(stackExpr, stackScope);
 
-		function generateOps() {
-			const
-				soloOps = [
-					Operator('+', 'Positive', 45, 1, function(args, sbt) { return args[0].calc(sbt); }),
-					Operator('-', 'Negative', 45, 1, function(args, sbt) { return CalcLib.negate(args[0].calc(sbt)); }),
-					Operator('~', 'BitNot', 43, 1, function(args, sbt) { return CalcLib.bitNot(args[0].calc(sbt)); }),
-					Operator('!', 'LogicNot', 41, 1, function(args, sbt) { return CalcLib.logicNot(args[0].calc(sbt)); }),
+	this.next = function () {
+		var curScope = stackScope.curScope, str = scanner.tokenString;
+		//console.log('[infix]', scanner.nextToken, str);
 
-					Operator('(', 'OpenBracket', 1, 1, function(args, sbt) { return args[0].calc(sbt); }),
-					Operator('[', 'OpenArray', 1, -1, function(args, sbt) { return CalcLib.arrayValue(args, sbt); }),
-				],
-				duoOps = [
-					Operator('(', 'OpenFunction', 81, -1, null /* not real op holder */ ),
-					Operator('[', 'OpenDerefArray', 81, -1, null /* not real op holder */ ),
-					Operator('.', 'Property', 81, 2, function(args, sbt) { return CalcLib.property(args[0], args[1], sbt); }),
-
-					Operator('**', 'Power', 47, 2, function(args, sbt) { return CalcLib.power(args[0].calc(sbt), args[1].calc(sbt)); }),
-					Operator('*', 'Times', 46, 2, function(args, sbt) { return CalcLib.multiply(args[0].calc(sbt), args[1].calc(sbt)); }),
-					Operator('/', 'Divide', 46, 2, function(args, sbt) { return CalcLib.divide(args[0].calc(sbt), args[1].calc(sbt)); }),
-					Operator('%', 'Modulo', 46, 2, function(args, sbt) { return CalcLib.modulo(args[0].calc(sbt), args[1].calc(sbt)); }),
-					Operator('//', 'IntDivide', 46, 2, function(args, sbt) { return CalcLib.intDivide(args[0].calc(sbt), args[1].calc(sbt)); }),
-
-					Operator('+', 'Plus', 45, 2, function(args, sbt) { return CalcLib.add(args[0].calc(sbt), args[1].calc(sbt)); }),
-					Operator('-', 'Minus', 45, 2, function(args, sbt) { return CalcLib.sub(args[0].calc(sbt), args[1].calc(sbt)); }),
-					//Operator('<<', 'ShiftLeft', 44, 2, function(args, sbt) { return CalcLib.shl(args[0].calc(sbt), args[1].calc(sbt)); }),
-					//Operator('>>', 'ShiftRight', 44, 2, function(args, sbt) { return CalcLib.shr(args[0].calc(sbt), args[1].calc(sbt)); }),
-					//Operator('>>>', 'ZeroShiftRight', 44, 2, function(args, sbt) { return CalcLib.sar(args[0].calc(sbt), args[1].calc(sbt)); }),
-					Operator('&', 'BitAnd', 43, 2, function(args, sbt) { return CalcLib.bitAnd(args[0].calc(sbt), args[1].calc(sbt)); }),
-					Operator('|', 'BitOr', 43, 2, function(args, sbt) { return CalcLib.bitOr(args[0].calc(sbt), args[1].calc(sbt)); }),
-					Operator('^', 'BitXor', 43, 2, function(args, sbt) { return CalcLib.bitXor(args[0].calc(sbt), args[1].calc(sbt)); }),
-
-					Operator('==', 'CompareEqual', 42, 2, function(args, sbt) { return CalcLib.isEqual(args[0].calc(sbt), args[1].calc(sbt)); }),
-					Operator('!=', 'CompareNotEqual', 42, 2, function(args, sbt) { return CalcLib.notEqual(args[0].calc(sbt), args[1].calc(sbt)); }),
-					Operator('>', 'CompareGreater', 42, 2, function(args, sbt) { return CalcLib.isGreater(args[0].calc(sbt), args[1].calc(sbt)); }),
-					Operator('>=', 'CompareGreaterEqual', 42, 2, function(args, sbt) { return CalcLib.isGreaterEqual(args[0].calc(sbt), args[1].calc(sbt)); }),
-					Operator('<', 'CompareLess', 42, 2, function(args, sbt) { return CalcLib.isLess(args[0].calc(sbt), args[1].calc(sbt)); }),
-					Operator('<=', 'CompareLessEqual', 42, 2, function(args, sbt) { return CalcLib.isLessEqual(args[0].calc(sbt), args[1].calc(sbt)); }),
-
-					Operator('&&', 'LogicAnd', 41, 2, function(args, sbt) { return CalcLib.logicAnd(args[0], args[1], sbt); }),
-					Operator('||', 'LogicOr', 41, 2, function(args, sbt) { return CalcLib.logicOr(args[0], args[1], sbt); }),
-
-					Operator('?', 'Query', 30, 3, null /* not real op holder */),
-					Operator(':', 'Colon', 30, 0, null),
-
-					Operator('@', 'Unit', 20, 2, function(args, sbt) { return CalcLib.setUnit(args[0], args[1], sbt); }),
-					Operator('=', 'Assign', 10, 2, function(args, sbt) { return CalcLib.assign(args[0], args[1].calc(sbt), sbt); }),
-
-					Operator(')', 'CloseBracket', 1, 0, null),
-					Operator(']', 'CloseArray', 1, 0, null),
-					Operator(',', 'Comma', 1, 0, null),
-				];
-
-			for (var i in soloOps)
-			{
-				var op = soloOps[i];
-				setOperator[op.op] = op;
-			}
-			for (var i in duoOps)
-			{
-				var op = duoOps[i];
-				setValue[op.op] = op;
-			}
-		}
-
-		const	opGaurdOp = Operator('#', '.GAURD', -1, 1, null),
-				opQuest = Operator('?:', 'Quest', 30, 3, function(args, sbt) { return CalcLib.quest(args[0].calc(sbt), args[1], args[2], sbt); }),
-				opFunction = Operator('(', 'OpenFunction', 1, -1, CalcLib.callFunction ),
-				opDerefArray = Operator('[', 'OpenDerefArray', 1, -1, CalcLib.derefArray );
-
-		function setModifiers()
-		{
-			opGaurdOp.stackModifier = function (curOp, stackExpr, stackScope)
-			{	// #GAURD
-				stackExpr.push(curOp)
-				stackScope.curScope = scpOperator;
-				return true;
-			};
-
-			function soloOpModifierSimple(curOp, stackExpr, stackScope)
-			{	// + - ~ !
-				var stkOp = stackExpr.cur();
-				stkOp.push(curOp);
-				stackExpr.push(curOp);
-				stackScope.curScope = scpOperator;
-				return true;
-			}
-
-			function duoOpModifierSimple(curOp, stackExpr, stackScope)
-			{	// ** * / % \  + - & | ^  == != > >= > >=  && ||
-				var stkOp = stackExpr.cur(), crank = curOp.op.rank;
-
-				while (crank <= stkOp.op.rank)
+		switch (scanner.nextToken) {
+			case tkOperator: 
+				var op = curScope === scpOperator ? this.setOperator[str] : this.setValue[str];
+				if (op === undefined)
 				{
-					stackExpr.pop();
-					stkOp = stackExpr.cur();
-				}
-
-				stkOp.changeCurrentParameter(curOp);
-				stackExpr.push(curOp);
-				stackScope.curScope = scpOperator;
-				return true;
-			}
-
-			const SoloSimples = "+ - ~ !".split(" "), DuoSimples = "** * / % //  + - & | ^  == != > >= < <=  && ||".split(" ");
-
-			for (var i in SoloSimples)
-			{
-				var op = SoloSimples[i];
-				if (op.length > 0)
-					setOperator[op].stackModifier = soloOpModifierSimple;
-			}
-
-			for (var i in DuoSimples)
-			{
-				var op = DuoSimples[i];
-				if (op.length > 0)
-					setValue[op].stackModifier = duoOpModifierSimple;
-			}
-
-			function getOpenerAsValueStackModifier(scp)
-			{
-				return function (curOp, stackExpr, stackScope)
-				{	// ( [	Bracket Array
-					var stkOp = stackExpr.cur();
-					stkOp.push(curOp);
-					stackExpr.push(curOp);
-					stackScope.push(scp);
-					stackScope.curScope = scpOperator;
-					return true;
-				};
-			};
-
-			setOperator['('].stackModifier = getOpenerAsValueStackModifier(scpBracket);
-			setOperator['['].stackModifier = getOpenerAsValueStackModifier(scpArray);
-
-			function getOpenerAsOperatorStackModifier(scp, realOp)
-			{
-				return function (curOp, stackExpr, stackScope)
-				{	// ( [	Function Dereference
-					var stkOp = stackExpr.cur(), crank = curOp.op.rank;
-
-					while (crank <= stkOp.op.rank)
+					if (str === ')' && stackExpr.cur().op === operators.OpenFunction)
 					{
-						stackExpr.pop();
-						stkOp = stackExpr.cur();
-					}
-
-					curOp.op = realOp;
-					stkOp.changeCurrentParameter(curOp);
-					stackExpr.push(curOp);
-					stackScope.push(scp);
-					stackScope.curScope = scpOperator;
-					return true;
-				};
-			};
-
-			setValue['('].stackModifier = getOpenerAsOperatorStackModifier(scpBracket, opFunction);
-			setValue['['].stackModifier = getOpenerAsOperatorStackModifier(scpArray, opDerefArray);
-
-			function getCloserStackModifier(scp, opstr)
-			{
-				return function (curOp, stackExpr, stackScope)
-				{	// ) ]
-					if (stackScope.cur() != scp)
-						throw 'Not matched close bracket ")" or "]"';
-
-					var stkOp = stackExpr.cur();
-					while (stkOp.op.op != opstr)
-					{
-						stackExpr.pop();
-						stkOp = stackExpr.cur();
-					}
-
-					stackExpr.pop();
-					stackScope.pop();
-					stackScope.curScope = scpValue;
-					return true;
-				};
-			};
-
-			setValue[')'].stackModifier = getCloserStackModifier(scpBracket, '(');
-			setValue[']'].stackModifier = getCloserStackModifier(scpArray, '[');
-
-			setValue[','].stackModifier = function (curOp, stackExpr, stackScope) {	// ,
-				var scp = stackScope.cur();
-				if (scp != scpArray && scp != scpBracket)
-					throw 'Comma "," not in any opened bracket range.';
-
-				var stkOp = stackExpr.cur(), crank = curOp.op.rank;
-				while (stkOp.op.rank != crank )
-				{
-					stackExpr.pop();
-					stkOp = stackExpr.cur();
+						op = this.setValue[str];
+					} else
+						throw "Invalid Operator: " + str;
 				}
 
-				var curOp = stkOp.op;
-				if ( curOp.op != '[' && curOp != opFunction )
-					throw 'Invalid position of ",".';
+				if (!op.stackModifier)
+					throw "Not supported operator: " + op;
 
-				stackScope.curScope = scpOperator;
-				return true;
-			};
-
-			setValue['?'].stackModifier = function (curOp, stackExpr, stackScope) {	// ?
-				var stkOp = stackExpr.cur(), crank = curOp.op.rank;
-
-				while (crank < stkOp.op.rank)
+				if (!op.newExpr().modifyStacks(stackExpr, stackScope))
 				{
-					stackExpr.pop();
-					stkOp = stackExpr.cur();
+					// failed!
+					throw 'Modify stack failed!';
+				}
+				break;
+			case tkIdentity:
+			case tkNumber:
+			case tkString:
+				if (curScope !== scpOperator)
+					throw "Invalid Operator: " + scanner.nextToken;
+
+				var 
+					ve = scanner.nextToken === tkIdentity ? IdentityExpr(str) : ValueExpr(str, scanner.nextToken === tkNumber), 
+					oe = stackExpr.cur();
+				if (!oe.push(ve))
+				{
+					throw 'Expression push value failed!';
 				}
 
-				stkOp.changeCurrentParameter(curOp);
-				stackExpr.push(curOp);
-				stackScope.push(scpQuery);
-				stackScope.curScope = scpOperator;
-				return true;
-			}
-
-			setValue[':'].stackModifier = function (curOp, stackExpr, stackScope) {	// :
-				var scp = stackScope.cur();
-				if (scp != scpQuery)
-					throw 'Colon ":" not in a question "?" expression.';
-
-				var stkOp = stackExpr.cur();
-
-				while (stkOp.op.op != '?')
-				{
-					stackExpr.pop();
-					stkOp = stackExpr.cur();
-				}
-
-				stkOp.op = opQuest;
-				stackScope.pop();
-				stackScope.curScope = scpOperator;
-				return true;
-			}
-
-			setValue['='].stackModifier = function (curOp, stackExpr, stackScope)
-			{	// =
-				var stkOp = stackExpr.cur(), crank = curOp.op.rank;
-
-				while (crank < stkOp.op.rank)
-				{
-					stackExpr.pop();
-					stkOp = stackExpr.cur();
-				}
-
-				stkOp.changeCurrentParameter(curOp);
-				stackExpr.push(curOp);
-				stackScope.curScope = scpOperator;
-				stackExpr.containAssign = true;
-				return true;
-			}
-
-			/*
-			todo:
-				@
-			*/
+				stackScope.curScope = scpValue;
+				break;
+			default:
+			/* Invalid!
+			case tkInvalidInput:
+			case tkInvalidNumber: 
+			case tkInvalidHex: 
+			case tkInvalidOctal: 
+			case tkInvalidBin:
+				// invalid! */
+				throw '[ERROR] At position ' + scanner.from + ': "' + str + '" - ' + scanner.nextToken.name;
+				//return scanner;
 		}
+	};
 
-		generateOps();
-		setModifiers();
-
-		self.parse = function() {
-			var opGaurd = opGaurdOp.newExpr(), stackScope = Stack(), stackExpr = Stack(), scanner = this.scanner;
-			opGaurd.modifyStacks(stackExpr, stackScope);
-
-			var round = 0;
-			stackExpr.result = opGaurd;
-			stackExpr.containAssign = false;
-
-			while (scanner.next())
-			{
-				var curScope = stackScope.curScope, str = scanner.tokenString;
-
-				switch (scanner.nextToken) {
-					case tkWhiteSpace:
-					case tkComment:
-						continue;
-					case tkOperator: 
-						var op = curScope == scpOperator ? setOperator[str] : setValue[str];
-						if (op == undefined)
-						{
-							if (str == ')' && stackExpr.cur().op === opFunction)
-							{
-								op = setValue[str];
-							} else
-								throw "Invalid Operator: " + str;
-						}
-
-						if (!op.stackModifier)
-							throw "Not supported operator: " + op;
-
-						if (!op.newExpr().modifyStacks(stackExpr, stackScope))
-						{
-							// failed!
-							return;
-						}
-						break;
-					case tkIdentity:
-					case tkNumber:
-					case tkString:
-						if (curScope != scpOperator)
-							throw "Invalid Operator: " + scanner.nextToken;
-
-						var ve = scanner.nextToken == tkIdentity ? IdentityExpr(str) : ValueExpr(str, scanner.nextToken == tkNumber), oe = stackExpr.cur();
-						if (!oe.push(ve))
-						{
-							// failed!
-							return;
-						}
-
-						stackScope.curScope = scpValue;
-						break;
-					default:
-					/* Invalid!
-					case tkInvalidInput:
-					case tkInvalidNumber: 
-					case tkInvalidHex: 
-					case tkInvalidOctal: 
-					case tkInvalidBin:
-						// invalid! */
-						throw '[ERROR] At position ' + scanner.from + ': "' + str + '" - ' + scanner.nextToken.name;
-						return scanner;
-				}
-				//console.log(""+opGaurd.parameters[0]);
-			}
-
-			if (stackScope.count > 0)
-			{
-				/*
-				if (stackScope.cur() == scpQuery)
-				{
-					stackScope.pop();
-				} else
-				*/
-					throw stackScope.count + ' of open operatorer(s) like "?", "(", "[" not be closed!';
-			}
-
-			if (stackScope.curScope != scpValue)
-				throw 'The expression is not completed!';
-
-			var r = opGaurd.parameters[0];
-			r.assign = stackExpr.containAssign;
-			return r;
-		}
-
+	this.push = function (expr) {
+		stackExpr.cur().push(expr);
+		stackScope.curScope = scpValue;
 	}
 
-	if (!(this instanceof Parser))
-        return new Parser(scanner);
+	this.close = function () {
+		if (stackScope.count > stackScopeCount)
+		{
+			/*
+			if (stackScope.cur() == scpQuery)
+			{
+				stackScope.pop();
+			} else
+			*/
+				throw (stackScope.count-stackScopeCount) + ' of open operatorer(s) like "?", "(", "[" not be closed!';
+		}
 
-	this.scanner = scanner;
+		if (stackScope.curScope != scpValue)
+			throw 'The expression is not completed!';
+
+		var r = opGaurd.parameters[0];
+		r.assign = stackExpr.containAssign;
+		return r;
+	};
+}
+
+(function () {
+	var setOperators = { }, setValues = { }, i, op;
+	// const SoloSimples = "+ - ~ !".split(" "), DuoSimples = "** * / % //  + - & | ^  == != > >= < <=  && ||".split(" ");
+	const
+		opOperators = [ 'Positive', 'Negative', 'BitNot', 'LgcNot', 'OpenBracket', 'OpenArray', ],
+		opValues = [ '_OpenFunction', '_OpenDerefArray', 'Property', 'Power', 'Times', 'Divide', 'Modulo', 'IntDivide', 'Plus', 'Minus', 'BitAnd', 'BitOr', 'BitXor', 'CmpEqual', 'CmpNotEqual', 'CmpGreater', 'CmpGreaterEqual', 'CmpLess', 'CmpLessEqual', 'LgcAnd', 'LgcOr', '_Quest', 'Colon', 'Unit', 'Assign', 'CloseBracket', 'CloseArray', 'Comma', ];
+	
+	for (i in opOperators) {
+		op = operators[opOperators[i]];
+		setOperators[op.op] = op;
+	}
+
+	for (i in opValues) {
+		op = operators[opValues[i]];
+		setValues[op.op] = op;
+	}
+
+	InfixExprConstructor.prototype.setOperator = setOperators;
+	InfixExprConstructor.prototype.setValue = setValues;
+})();
+
+function PostfixExprContructor(scanner, stackScope) {
+	if (!(this instanceof PostfixExprContructor))
+        return new PostfixExprContructor(scanner, stackScope);
+
+    var stack = Stack(), assign = false, stackScopeCount = stackScope.count;
+	this.next = function () {
+		var curScope = stackScope.curScope, str = scanner.tokenString;
+		//console.log('[postfix]', scanner.nextToken, str);
+
+		switch (scanner.nextToken) {
+			case tkOperator: 
+				switch (str) {
+					case '(':
+						stackScope.push(scpBracket);
+						stack.push(operators.OpenFunction.newExpr());
+						return;
+					case ')':
+						if (stackScope.cur() !== scpBracket)
+							throw 'Unexpected ")"';
+						
+						stackScope.pop();
+						var args = [], e = stack.cur();
+						while ( !(e.type === etOperator && e.op === operators.OpenFunction) ) {
+							args.push(stack.pop());
+							e = stack.cur();
+						}
+
+						e.push(args[0]);
+						var count = args.length-1;
+						for (var i = args.length-1; i > 0; --i) {
+							e.push(args[i]);
+						}
+						return;
+					case ',':
+						return;
+				}
+
+				var op = this.supported[str];
+				if (!op)
+					throw "Invalid Postfix Operator: " + str;
+
+				var oprd = op.operand, oe = op.newExpr(), args = [];
+				assign = assign || op.op === '=';
+				if (oprd > stack.count)
+					throw 'Too less operands for operator "'+op.op+'" ('+oprd+' requested, '+stack.count+' given)';
+
+				args.length = oprd;
+				for (var i = oprd-1; i >= 0; i--) {
+					args[i] = stack.pop();
+				}
+
+				for (var i in args)
+					oe.push(args[i]);
+				stack.push(oe);
+				break;
+			case tkIdentity:
+			case tkNumber:
+			case tkString:
+				var ve = scanner.nextToken === tkIdentity ? IdentityExpr(str) : ValueExpr(str, scanner.nextToken === tkNumber);
+				stack.push(ve);
+				break;
+			default:
+			/* Invalid!
+			case tkInvalidInput:
+			case tkInvalidNumber: 
+			case tkInvalidHex: 
+			case tkInvalidOctal: 
+			case tkInvalidBin:
+				// invalid! */
+				throw '[ERROR] At position ' + scanner.from + ': "' + str + '" - ' + scanner.nextToken.name;
+		}
+	};
+
+	this.push = function (expr) {
+		stack.push(expr);
+	}
+
+	this.close = function () {
+		if (stackScope.count > stackScopeCount)
+		{
+			/*
+			if (stackScope.cur() == scpQuery)
+			{
+				stackScope.pop();
+			} else
+			*/
+				throw stackScope.count + ' of open operatorer(s) like "(" not be closed!';
+		}
+
+		var r = stack.pop();
+		r.assign = assign;
+		return r;
+	};
+}
+
+(function () {
+	var supported = {}, ops = [
+		//'Positive', //		Operator( '+',	45,	1,	'Positive',	fnModifiers.unary,	function(args, sbt) { return args[0].calc(sbt); } ),
+		//'Negative', //		Operator( '-',	45,	1,	'Negative',	fnModifiers.unary,	function(args, sbt) { return CalcLib.negate(args[0].calc(sbt)); } ),
+		'BitNot', //		Operator( '~',	43,	1,	'BitNot',	fnModifiers.unary,	function(args, sbt) { return CalcLib.bitNot(args[0].calc(sbt)); } ),
+		'LgcNot', //		Operator( '!',	41,	1,	'LgcNot',	fnModifiers.unary,	function(args, sbt) { return CalcLib.logicNot(args[0].calc(sbt)); } ),
+		//'OpenBracket', //	Operator( '(',	1,	1,	'OpenBracket',	fnModifiers.getUnaryOpenerModifier(scpBracket),	function(args, sbt) { return args[0].calc(sbt); } ),
+		//'OpenArray', //	Operator( '[',	1,	-1,	'OpenArray',	fnModifiers.getUnaryOpenerModifier(scpArray),	function(args, sbt) { return CalcLib.arrayValue(args, sbt); } ),
+
+		//'_OpenFunction', //	Operator( '(',	81,	-1,	'_OpenFunction',	fnModifiers.getBiaryOpenerModifier(scpBracket, this.OpenFunction),	null /* not real op holder */ ),
+		//'_OpenDerefArray', //	Operator( '[',	81,	-1,	'_OpenDerefArray',	fnModifiers.getBiaryOpenerModifier(scpArray, this.OpenDerefArray),	null /* not real op holder */ ),
+		'Property', //		Operator( '.',	81,	2,	'Property',	fnModifiers.binary,	function(args, sbt) { return CalcLib.property(args[0], args[1], sbt); } ),
+		'Power', //		Operator( '**',	47,	2,	'Power',	fnModifiers.binary,	function(args, sbt) { return CalcLib.power(args[0].calc(sbt), args[1].calc(sbt)); } ),
+		'Times', //		Operator( '*',	46,	2,	'Times',	fnModifiers.binary,	function(args, sbt) { return CalcLib.multiply(args[0].calc(sbt), args[1].calc(sbt)); } ),
+		'Divide', //		Operator( '/',	46,	2,	'Divide',	fnModifiers.binary,	function(args, sbt) { return CalcLib.divide(args[0].calc(sbt), args[1].calc(sbt)); } ),
+		'Modulo', //		Operator( '%',	46,	2,	'Modulo',	fnModifiers.binary,	function(args, sbt) { return CalcLib.modulo(args[0].calc(sbt), args[1].calc(sbt)); } ),
+		'IntDivide', //	Operator( '//',	46,	2,	'IntDivide',	fnModifiers.binary,	function(args, sbt) { return CalcLib.intDivide(args[0].calc(sbt), args[1].calc(sbt)); } ),
+		'Plus', //			Operator( '+',	45,	2,	'Plus',	fnModifiers.binary,	function(args, sbt) { return CalcLib.add(args[0].calc(sbt), args[1].calc(sbt)); } ),
+		'Minus', //		Operator( '-',	45,	2,	'Minus',	fnModifiers.binary,	function(args, sbt) { return CalcLib.sub(args[0].calc(sbt), args[1].calc(sbt)); } ),
+		'BitAnd', //		Operator( '&',	43,	2,	'BitAnd',	fnModifiers.binary,	function(args, sbt) { return CalcLib.bitAnd(args[0].calc(sbt), args[1].calc(sbt)); } ),
+		'BitOr', //		Operator( '|',	43,	2,	'BitOr',	fnModifiers.binary,	function(args, sbt) { return CalcLib.bitOr(args[0].calc(sbt), args[1].calc(sbt)); } ),
+		'BitXor', //		Operator( '^',	43,	2,	'BitXor',	fnModifiers.binary,	function(args, sbt) { return CalcLib.bitXor(args[0].calc(sbt), args[1].calc(sbt)); } ),
+		'CmpEqual', //			Operator( '==',	42,	2,	'CmpEqual',	fnModifiers.binary,	function(args, sbt) { return CalcLib.isEqual(args[0].calc(sbt), args[1].calc(sbt)); } ),
+		'CmpNotEqual', //		Operator( '!=',	42,	2,	'CmpNotEqual',	fnModifiers.binary,	function(args, sbt) { return CalcLib.notEqual(args[0].calc(sbt), args[1].calc(sbt)); } ),
+		'CmpGreater', //		Operator( '>',	42,	2,	'CmpGreater',	fnModifiers.binary,	function(args, sbt) { return CalcLib.isGreater(args[0].calc(sbt), args[1].calc(sbt)); } ),
+		'CmpGreaterEqual', //	Operator( '>=',	42,	2,	'CmpGreaterEqual',	fnModifiers.binary,	function(args, sbt) { return CalcLib.isGreaterEqual(args[0].calc(sbt), args[1].calc(sbt)); } ),
+		'CmpLess', //			Operator( '<',	42,	2,	'CmpLess',	fnModifiers.binary,	function(args, sbt) { return CalcLib.isLess(args[0].calc(sbt), args[1].calc(sbt)); } ),
+		'CmpLessEqual', //		Operator( '<=',	42,	2,	'CmpLessEqual',	fnModifiers.binary,	function(args, sbt) { return CalcLib.isLessEqual(args[0].calc(sbt), args[1].calc(sbt)); } ),
+		'LgcAnd', //	Operator( '&&',	41,	2,	'LgcAnd',	fnModifiers.binary,	function(args, sbt) { return CalcLib.logicAnd(args[0], args[1], sbt); } ),
+		'LgcOr', //	Operator( '||',	41,	2,	'LgcOr',	fnModifiers.binary,	function(args, sbt) { return CalcLib.logicOr(args[0], args[1], sbt); } ),
+		//'_Quest', //	Operator( '?',	30,	3,	'_Quest',	fnModifiers.binary,	null /* not real op holder */ ),
+		'Colon', //	Operator( ':',	30,	0,	'Colon',	fnModifiers.colon,	null ),
+		'Unit', //		Operator( '@',	20,	2,	'Unit',	fnModifiers.binary,	function(args, sbt) { return CalcLib.setUnit(args[0], args[1], sbt); } ),
+		'Assign', //	Operator( '=',	10,	2,	'Assign',	fnModifiers.assign,	function(args, sbt) { return CalcLib.assign(args[0], args[1].calc(sbt), sbt); } ),
+		//'CloseBracket', //	Operator( ')',	1,	0,	'CloseBracket',	fnModifiers.getCloserModifier(scpBracket, '('),	null ),
+		//'CloseArray', //	Operator( ']',	1,	0,	'CloseArray',	fnModifiers.getCloserModifier(scpBracket, '['),	null ),
+		//'Comma', //		Operator( ',',	1,	0,	'Comma',	fnModifiers.binary,	null ),
+
+		//'$GAURD', //	Operator( '#',	-1,	1,	'$GAURD',	fnModifiers.gaurd,	null ),
+		'Quest', //	Operator( '?:',	30,	3,	'Quest',	fnModifiers.quest,	function(args, sbt ),
+		//'OpenFunction', //		Operator( '(',	1,	-1,	'OpenFunction',	null,	CalcLib.callFunction ),
+		//'OpenDerefArray', //	Operator( '[',	1,	-1,	'OpenDerefArray',	null,	CalcLib.derefArray ),
+	];
+	for (var i in ops) {
+		var op = operators[ops[i]];
+		supported[op.op] = op;
+	}
+	PostfixExprContructor.prototype.supported = supported;
+})();
+
+var 
+	NotationExprMap = {
+		'infix':	InfixExprConstructor,
+		'postfix':	PostfixExprContructor,
+	},
+	NotationDOMAttrs	= {
+		'infix':	{ placeholder: 'infix:', title: 'infix notation', },
+		'postfix':	{ placeholder: 'postfix:', title: 'Reverse Polish notation', },
+	},
+	ExprContructors = {
+		'#{IN:':	InfixExprConstructor,
+		'#{RPN:':	PostfixExprContructor,
+	};
+
+function parse(scanner) {
+	var stackScope = Stack(), cur = NotationExprMap[notation](scanner, stackScope), stack = Stack(), assign = false;
+	stack.push(cur);
+	while (scanner.next()) {
+		var str = scanner.tokenString;
+		//console.log(scanner.nextToken, str);
+
+		switch (scanner.nextToken) {
+			case tkWhiteSpace:
+			case tkComment:
+				continue;
+			case tkScope:
+				var ec = ExprContructors[str.toUpperCase()];
+				if (!ec)
+					throw 'Unknown Notation symbol: "'+str.substring(2, str.length-1)+'"';
+				stack.push(cur = ec(scanner, stackScope));
+				stackScope.push(scpInline);
+				break;
+			case tkOperator: 
+				if (str === '}' && stackScope.cur() === scpInline) {
+					if (stack.count <= 1)
+						throw 'Unexpected operator "}"';
+					
+					stackScope.pop();
+					var e = stack.pop().close();
+					assign = assign || e.assign;
+					cur = stack.cur();
+					cur.push(e);
+					continue;
+				}
+
+				cur.next();
+				break;
+			case tkIdentity:
+			case tkNumber:
+			case tkString:
+				cur.next();
+				break;
+			default:
+			/* Invalid!
+			case tkInvalidInput:
+			case tkInvalidNumber: 
+			case tkInvalidHex: 
+			case tkInvalidOctal: 
+			case tkInvalidBin:
+				// invalid! */
+				throw '[ERROR] At position ' + scanner.from + ': "' + str + '" - ' + scanner.nextToken.name;
+				return scanner;
+		}
+		//console.log(""+opGaurd.parameters[0]);
+	}
+
+	if (stack.count > 1)
+		throw 'Unclosed inline Notation';
+
+	var r = cur.close();
+	r.assign = r.assign || assign;
+	return r;
 }

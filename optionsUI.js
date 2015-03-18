@@ -5,6 +5,7 @@ function updateSettingsUI()
 	// int scale
 	$('.button.grouped').removeClass('down');
 	$('.button.grouped[data-scale="'+intScale.scale+'"]').addClass('down');
+	$('.button.grouped[data-notation="'+notation+'"]').addClass('down');
 
 	function updateSep(opt)
 	{
@@ -32,6 +33,11 @@ function changeIntScale(scale)
 	$('.button.grouped').removeClass('down');
 	$('.button.grouped[data-scale="'+intScale.scale+'"]').addClass('down');
 	saveIntScale();
+}
+
+function changeNotation(notation)
+{
+	myStg.set({ notation: notation });
 }
 
 function changeSeparator(root)
@@ -113,7 +119,7 @@ function loadSettings()
 {
 	try {
 		resetToDefault();
-		var data = myStg.get(['history', 'intOpt', 'realOpt', 'intScale', 'MAX_HISTORY_ITEMS']);
+		var data = myStg.getAll();
 
 		if (data.history)
 			historyList = data.history;
@@ -130,6 +136,9 @@ function loadSettings()
 		if (data.MAX_HISTORY_ITEMS)
 			MAX_HISTORY_ITEMS = data.MAX_HISTORY_ITEMS;
 
+		if (data.notation)
+			notation = data.notation;
+
 		console.log('intOpt', data.intOpt);
 		console.log('realOpt', data.realOpt);
 		console.log('intScale', data.intScale);
@@ -143,13 +152,7 @@ function loadSettings()
 
 $(function () {
 	$('.button[data-button-style="Downable"]').click(function() {
-		var btn = $(this);
-		if (btn.hasClass('down'))
-		{
-			btn.removeClass('down');
-		} else {
-			btn.addClass('down');
-		}
+		$(this).toggleClass('down');
 	});
 
 	function groupedAction(e) {
@@ -166,7 +169,16 @@ $(function () {
 		if ( !groupedAction($(this)) )
 			return;
 
-		changeIntScale($(this).attr('data-scale'));
+		var grp = $(this).attr('data-group');
+		switch (grp) {
+			case 'scale':
+				changeIntScale($(this).attr('data-scale'));
+				break;
+			case 'notation':
+				changeNotation($(this).attr('data-notation'));
+				break;
+		}
+		//changeIntScale($(this).attr('data-scale'));
 	});
 
 	$('.sep>select').change(function () {

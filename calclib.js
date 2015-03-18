@@ -61,25 +61,45 @@ function getCalculatorLibrary() {
 
 	r.parseString = function (str) {
 		var s = "", len = str.length-1;
-		for (var i = 1; i < len; i++)
-		{
+		for (var i = 1; i < len; i++) {
 			var c = str[i];
-			if (c == '\\')
+			if (c === '\\')
 			{
-				c = str[++i];
-				switch (c) {
-					case 'b': c = '\b'; break;
-					case 't': c = '\t'; break;
-					case 'n': c = '\n'; break;
-					case 'r': c = '\r'; break;
-					case 'f': c = '\f'; break;
-					//case 'u': break;
+				var c1 = str[++i];
+				switch (c1) {
+					case "'":
+						c = "'"; break;
+					default:
+						c += c1;
 				}
+			} else if (c === '"') {
+				c = '\\"';
 			}
-			s = s+c;
+			s += c;
 		}
-		return ValueObject(s, vtString);
-	}
+
+		return ValueObject(JSON.parse('"' + s + '"'), vtString);
+	};
+
+	/*	= JSON.stringify
+	r.encodeEscapeString = function (str) {
+		var s = "'";
+		for (var i in str) {
+			var c = str[i];
+			switch (c) {
+				case '\b':	c = '\\b'; break;
+				case '\t':	c = '\\t'; break;
+				case '\n':	c = '\\n'; break;
+				case '\r':	c = '\\r'; break;
+				case '\f':	c = '\\f'; break;
+				case "'":	c = "\\'"; break;
+				case '\\':	c = '\\\\'; break;
+			}
+			s += c;
+		}
+		return s+"'";
+	};
+	*/
 
 	function bitOps()
 	{

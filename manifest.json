@@ -1,21 +1,23 @@
 {
   "manifest_version": 2,
-  "name": "Excellent Calculator",
-  "version": "0.5",
+  "name": "eCalculator",
+  "version": "0.6",
 
   "description": "A powerful calculator.",
   "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'",
   "icons" : {
     "128": "./icons/calc.png",
-    "64": "./icons/calc64.png",
-    "48": "./icons/calc48.png",
-    "32": "./icons/calc32.png",
-    "38": "./icons/calc38.png",
-    "19": "./icons/calc19.png"
+    "64": "./icons/calc-64.png",
+    "48": "./icons/calc-48.png",
+    "32": "./icons/calc-32.png",
+    "38": "./icons/calc-38.png",
+    "24": "./icons/calc-24.png",
+    "16": "./icons/calc-16.png",
+    "19": "./icons/calc-19.png"
   },
 
   "browser_action": {
-    "default_icon": "./icons/calc19.png",
+    "default_icon": "./icons/calc-19.png",
     "default_popup": "index.html"
   },
   

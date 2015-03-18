@@ -1,6 +1,6 @@
 function Token(name)
 {
-	if (Token.prototype.newTokenId == undefined)
+	if (Token.prototype.newTokenId === undefined)
 	{
 		var tokenId = 0, self = Token.prototype;
 		self.newTokenId = function() {
@@ -19,13 +19,13 @@ function Token(name)
 }
 
 const
-	tkWhiteSpace = Token('*BLANK'), tkComment = Token('*COMMENT'), 
+	tkWhiteSpace = Token('*BLANK'), tkComment = Token('*COMMENT'), tkScope = Token('Scope'), 
 	tkOperator = Token('Operator'), tkKeyword = Token('Keyword'), tkIdentity = Token('Identity'), tkNumber = Token('Number'), tkString = Token('String'),
-	tkInvalidInput = Token('InvalidInput'), tkInvalidNumber = Token('InvalidNumber'), 
+	tkInvalidInput = Token('InvalidInput'), tkInvalidString = Token('InvalidString'), tkInvalidNumber = Token('InvalidNumber'), 
 	tkInvalidHex = Token('InvalidHex'), tkInvalidOctal = Token('InvalidOctal'), tkInvalidBin = Token('InvalidBin');
 
 function Scanner(str) {
-	if (this.reset == undefined) {
+	if (this.reset === undefined) {
 		self = Scanner.prototype;
 		const keywords = {};
 
@@ -53,10 +53,10 @@ function Scanner(str) {
 			else
 				scanInvalid(context);
 
-			var ts = (context.nextToken != tkComment && context.nextToken != tkWhiteSpace) ?
+			var ts = (context.nextToken !== tkComment && context.nextToken !== tkWhiteSpace) ?
 				 context.text.substring(context.from, context.index) : null;
 			context.tokenString = ts;
-			if ( context.nextToken == tkIdentity && ts in keywords )
+			if ( context.nextToken === tkIdentity && ts in keywords )
 				context.nextToken = keywords[ts];
 			return true;
 		}
@@ -76,11 +76,25 @@ function Scanner(str) {
 			context.nextToken = tkWhiteSpace;
 		}
 
-		function scanComment(context) // #
+		function scanComment(context) // # #{
 		{
-			while (++context.index < context.count && context.text[context.index] != '\n')
-				/* escape */;
+			if (context.index < context.count && context.text[context.index+1] === '{') {
+				++context.index;
+				while (++context.index < context.count) {
+					var c = context.text[context.index];
+					if (c === ':') {
+						context.nextToken = tkScope;
+						++context.index;
+						return;
+					}
+					if (!( (c>='a' && c<='z') || (c>='A' && c<='Z') || (c>='0' && c<='9') || c === '_' ))
+						break;
+				}
+			}
+
 			context.nextToken = tkComment;
+			while (++context.index < context.count && context.text[context.index] !== '\n')
+				/* escape */;
 		}
 
 		function scanOnlyOp(context) // + - % ( ) [ ] { } ~ ^ ? : , @
@@ -102,20 +116,20 @@ function Scanner(str) {
 				case '/':
 				case '|':
 				case '&':
-					if (c2 == c1)
+					if (c2 === c1)
 						++context.index;
 					break;
 				case '>':
-					if (c2 == '=' || c2 == '>')
+					if (c2 === '=' || c2 === '>')
 						++context.index;
 					break;
 				case '<':
-					if (c2 == '=' || c2 == '<')
+					if (c2 === '=' || c2 === '<')
 						++context.index;
 					break;
 				case '=':
 				case '!':
-					if (c2 == '=')
+					if (c2 === '=')
 						++context.index;
 					break;
 			}
@@ -126,7 +140,7 @@ function Scanner(str) {
 			while (++context.index < context.count)
 			{
 				var c = context.text[context.index];
-				if ((c>='a' && c<='z') || (c>='A' && c<='Z') || (c>='0' && c<='9') || c == '_')
+				if ((c>='a' && c<='z') || (c>='A' && c<='Z') || (c>='0' && c<='9') || c === '_')
 					continue;
 				break;
 			}
@@ -144,20 +158,21 @@ function Scanner(str) {
 			while (++context.index < context.count)
 			{
 				var c = context.text[context.index];
-				if (c == '\\')
+				if (c === '\\')
 				{
 					if (++context.index > context.count)
 					{
 						context.nextToken = tkInvalid;
 						return;
 					}
-				} else if (c == quote)
+				} else if (c === quote)
 				{
 					++context.index;
-					break;
+					context.nextToken = tkString;
+					return;
 				}
 			}
-			context.nextToken = tkString;
+			context.nextToken = tkInvalidString;
 		}
 
 		function doScanNumberSubset(context, valid, r, checker)
@@ -165,10 +180,10 @@ function Scanner(str) {
 			while (++context.index < context.count)
 			{
 				var c = context.text[context.index];
-				if ( !((c>='a' && c<='z') || (c>='A' && c<='Z') || (c>='0' && c<='9') || c == '_') )
+				if ( !((c>='a' && c<='z') || (c>='A' && c<='Z') || (c>='0' && c<='9') || c === '_') )
 					break;
 
-				if ( c == '_' )
+				if ( c === '_' )
 					continue;
 
 				if (!(c in valid))
@@ -200,7 +215,7 @@ function Scanner(str) {
 		function checkEPart(context)
 		{
 			var c = context.text[context.index];
-			return (c == 'e' || c == 'E');
+			return (c === 'e' || c === 'E');
 		}
 
 
