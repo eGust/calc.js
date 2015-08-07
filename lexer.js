@@ -19,9 +19,9 @@ function Token(name)
 }
 
 const
-	tkWhiteSpace = Token('*BLANK'), tkComment = Token('*COMMENT'), tkScope = Token('Scope'), 
+	tkWhiteSpace = Token('*BLANK'), tkComment = Token('*COMMENT'), tkScope = Token('Scope'),
 	tkOperator = Token('Operator'), tkKeyword = Token('Keyword'), tkIdentity = Token('Identity'), tkNumber = Token('Number'), tkString = Token('String'),
-	tkInvalidInput = Token('InvalidInput'), tkInvalidString = Token('InvalidString'), tkInvalidNumber = Token('InvalidNumber'), 
+	tkInvalidInput = Token('InvalidInput'), tkInvalidString = Token('InvalidString'), tkInvalidNumber = Token('InvalidNumber'),
 	tkInvalidHex = Token('InvalidHex'), tkInvalidOctal = Token('InvalidOctal'), tkInvalidBin = Token('InvalidBin');
 
 function Scanner(str) {
@@ -63,7 +63,7 @@ function Scanner(str) {
 
 		function scanInvalid(context)
 		{
-			while (++context.index < context.count && !(context.text[context.index] in scanners)) 
+			while (++context.index < context.count && !(context.text[context.index] in scanners))
 				/* escape */;
 			context.nextToken = tkInvalidInput;
 		}
@@ -110,9 +110,12 @@ function Scanner(str) {
 			if (++context.index >= context.count)
 				return;
 
-			var c2 = context.text[context.index];			
+			var c2 = context.text[context.index];
 			switch (c1) {
 				case '*':
+					if (c2 === c1 || c2 === '/')
+						++context.index;
+					break;
 				case '/':
 				case '|':
 				case '&':
@@ -208,7 +211,7 @@ function Scanner(str) {
 			ValidDecChars = { '0': 0, '1': 1, '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9, },
 			ValidHexChars = {
 				'0': 0x00, '1': 0x01, '2': 0x02, '3': 0x03, '4': 0x04, '5': 0x05, '6': 0x06, '7': 0x07, '8': 0x08, '9': 0x09,
-				'a': 0x0a, 'b': 0x0b, 'c': 0x0c, 'd': 0x0d, 'e': 0x0e, 'f': 0x0f, 
+				'a': 0x0a, 'b': 0x0b, 'c': 0x0c, 'd': 0x0d, 'e': 0x0e, 'f': 0x0f,
 				'A': 0x0A, 'B': 0x0B, 'C': 0x0C, 'D': 0x0D, 'E': 0x0E, 'F': 0x0F,
 			};
 
@@ -224,7 +227,7 @@ function Scanner(str) {
 			context.nextToken = tkInvalidNumber;
 			if (context.index+1 >= context.count)
 				return;
-			
+
 			switch (context.text[context.index+1]) {
 				case '+':
 				case '-':
@@ -261,7 +264,7 @@ function Scanner(str) {
 			context.nextToken = tkOperator;
 			if ( ++context.index >= context.count || !(context.text[context.index] in ValidDecChars) )
 				return;
-			
+
 			context.index--;
 			doScanNumberFloatPart(context, false);
 		}

@@ -105,7 +105,7 @@ function getCalculatorLibrary() {
 	{
 		const Hex = '0123456789abcdef';
 		var r = { 'NOT': {}, 'AND': null, 'OR': null, 'XOR': null, }, set;
-		
+
 		set = r.NOT;
 		for (var i in Hex)
 		{
@@ -114,7 +114,7 @@ function getCalculatorLibrary() {
 			if (u != c)
 				set[u] = set[c];
 		}
-		
+
 		function make(fn)
 		{
 			var set = {};
@@ -143,7 +143,7 @@ function getCalculatorLibrary() {
 	}
 
 	const
-		hexBitOps = bitOps(), 
+		hexBitOps = bitOps(),
 		//Zeros = '0000000000000000',  // '0'*16 64-bit
 		Zeros = '00000000000000000000000000000000',  // '0'*32 128-bit
 		//Zeros = '0000000000000000000000000000000000000000000000000000000000000000',  // '0'*64 256-bit
@@ -217,7 +217,7 @@ function getCalculatorLibrary() {
 		var h1 = extendHex(v1.value, getHexCountIndex(v1.value)), hr = '';
 		for (var i in h1)
 			hr = hr + hexBitOps.NOT[h1[i]];
-		return ValueObject(new Decimal(hr, 16), vtNumber); 
+		return ValueObject(new Decimal(hr, 16), vtNumber);
 	};
 	r.logicNot = function(v1) { checkArgsDecimal(v1); return v1.toLogic() ? Decimal.ValueZero : Decimal.ValueOne; };	// !
 
@@ -228,6 +228,7 @@ function getCalculatorLibrary() {
 	}
 
 	r.power = function(v1, v2) { checkArgsDecimal(v1, v2); return ValueObject(v1.value.pow(v2.value), vtNumber); };	// **
+	r.nroot = function(v1, v2) { checkArgsDecimal(v1, v2); return ValueObject(v1.value.pow(Decimal.ONE.div(v2.value)), vtNumber); };	// */
 	r.multiply = function(v1, v2) { checkArgsDecimal(v1, v2); return ValueObject(v1.value.times(v2.value), vtNumber); };	// *
 	r.divide = function(v1, v2) { checkArgsDecimal(v1, v2); checkZero(v2); return ValueObject(v1.value.div(v2.value), vtNumber); };	// /
 	r.modulo = function(v1, v2) { checkArgsDecimal(v1, v2); checkZero(v2); return ValueObject(v1.value.modulo(v2.value), vtNumber); };	// %
@@ -248,13 +249,13 @@ function getCalculatorLibrary() {
 
 	function bitCalc(v1, v2, map)
 	{
-		checkArgsDecimal(v1, v2); 
-		var idx = Math.max(getHexCountIndex(v1.value), getHexCountIndex(v2.value)), 
+		checkArgsDecimal(v1, v2);
+		var idx = Math.max(getHexCountIndex(v1.value), getHexCountIndex(v2.value)),
 			h1 = extendHex(v1.value, idx), h2 = extendHex(v2.value, idx), hr = '';
 
 		for (var i in h1)
 			hr = hr + map[h1[i]][h2[i]];
-		return ValueObject(new Decimal(hr, 16), vtNumber); 
+		return ValueObject(new Decimal(hr, 16), vtNumber);
 	};
 
 	r.bitAnd	= function(v1, v2) { checkArgsDecimal(v1, v2); return bitCalc(v1, v2, hexBitOps.AND); }; // &
@@ -309,9 +310,9 @@ function getCalculatorLibrary() {
 
 	r.len = function(v1) {
 		if (v1.isString())
-			return ValueObject(new Decimal(v1.value.length), vtNumber); 
+			return ValueObject(new Decimal(v1.value.length), vtNumber);
 		if (v1.isNumber())
-			return ValueObject(new Decimal(v1.value.toString(10).length), vtNumber); 
+			return ValueObject(new Decimal(v1.value.toString(10).length), vtNumber);
 	};
 
 	const PI_2 = Math.PI / 2;
@@ -349,13 +350,6 @@ function getCalculatorLibrary() {
 		return ValueObject(new Decimal(v1.value.charCodeAt(0)), vtNumber);
 	};
 
-	r.ord = function(v1) {
-		checkArgsString(v1);
-		if (v1.length == 0)
-			throw "Can not use ord function on an empty string.";
-		return ValueObject(new Decimal(v1.value.charCodeAt(0)), vtNumber);
-	};
-
 	r.chr = function(v1) {
 		checkArgsDecimal(v1);
 		var v = v1.value;
@@ -370,16 +364,16 @@ function getCalculatorLibrary() {
 			return v1;
 		var h1 = extendHex(v1.value, getHexCountIndex(v1.value.minus(Decimal.ONE))), hr = '';
 		switch (h1[0]) {
-			case '8': case '9': 
-			case 'A': case 'B': case 'C': 
+			case '8': case '9':
+			case 'A': case 'B': case 'C':
 			case 'D': case 'E': case 'F':
-			case 'a': case 'b': case 'c': 
+			case 'a': case 'b': case 'c':
 			case 'd': case 'e': case 'f':
 				for (var i in h1)
 					hr = hr + hexBitOps.NOT[h1[i]];
-				return ValueObject((new Decimal(hr, 16)).plus(Decimal.ONE).neg(), vtNumber); 
+				return ValueObject((new Decimal(hr, 16)).plus(Decimal.ONE).neg(), vtNumber);
 			default:
-				return v1; 
+				return v1;
 		}
 	};
 
@@ -387,9 +381,55 @@ function getCalculatorLibrary() {
 		checkArgsDecimal(v1);
 		if (v1.value.isNeg()) {
 			var h1 = extendHex(v1.value, getHexCountIndex(v1.value));
-			return ValueObject((new Decimal(h1, 16)), vtNumber); 
+			return ValueObject((new Decimal(h1, 16)), vtNumber);
 		}
 		return v1;
+	};
+
+	const d256 = new Decimal(256), rgbArgs = "rgb";
+
+	r.rgb = function (r, g, b) {
+		// check args
+		var clrs = [r, g, b];
+		for (var i in clrs) {
+			var c = clrs[i];
+			if (!c.isNumber())
+				throw "Argument "+rgbArgs[i]+" is not a number: " + c;
+
+			var v = c.value;
+			if (!v.isInt())
+				throw "Argument "+rgbArgs[i]+" is not a Integer: " + v;
+
+			if (v.lt(Decimal.ZERO) || v.gte(d256))
+				throw "Argument "+rgbArgs[i]+" is out of range (must between 0 to 255): " + v;
+
+			clrs[i] = v.toNumber();
+		}
+
+		r = clrs[0];
+		g = clrs[1];
+		b = clrs[2];
+
+		return ValueObject((new Decimal(r << 16 | g << 8 | b)), vtNumber);
+	};
+
+	const d2p24 = new Decimal(256*256*256);
+
+	r.drgb = function (c) {
+		if (!c.isNumber())
+			throw "Argument "+rgbArgs[i]+" is not a number: " + c;
+
+		var v = c.value;
+		if (!v.isInt())
+			throw "Argument "+rgbArgs[i]+" is not a Integer: " + v;
+
+		if (v.lt(Decimal.ZERO) || v.gte(d2p24))
+			throw "Argument "+rgbArgs[i]+" is out of range (must between 0 to 0xFFFFF): " + v;
+
+		v = v.toNumber();
+		var r = (v >> 16) & 0xFF, g = (v >> 8) & 0xFF, b = (v) & 0xFF;
+
+		return ValueObject("rgb("+[r, g, b].join(', ')+')', vtString);
 	};
 
 	return r;
@@ -430,7 +470,7 @@ function registerGlobalSymbols()
 
 	gs.put("PI", ValueObject(Decimal.PI, vtNumber));
 	gs.put("E",  ValueObject(Decimal.E, vtNumber));
-	
+
 	gs.put('abs', ValueObject({
 			exec: CalcLib.abs,
 			paramCount: 1,
@@ -490,6 +530,17 @@ function registerGlobalSymbols()
 				exec: CalcLib.unsigned,
 				paramCount: 1,
 				dspt: 'unsigned(int), convert to unsigned',
+			}, vtFunction));
+
+	gs.put('rgb', ValueObject({
+				exec: CalcLib.rgb,
+				paramCount: 3,
+				dspt: 'rgb(r, g, b), combine colors. arguments must between 0 to 255',
+			}, vtFunction));
+	gs.put('drgb', ValueObject({
+				exec: CalcLib.drgb,
+				paramCount: 1,
+				dspt: 'drgb(color), extract r, g, b value of a color. argument must between 0 to 0xFFFFF',
 			}, vtFunction));
 }
 

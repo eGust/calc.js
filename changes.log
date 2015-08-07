@@ -1,3 +1,9 @@
+[0.7.0]
++ operator n-power's root: a */ b == a ** (1/b)
++ functions: rgb and drgb
++ Added hotkey for buttons
+* Press ESC will close the extension panel if the input box is empty
+
 [0.6]
 + Support RPN (aka Postfix Notation)
 + An option to change default notation (infix/postfix)

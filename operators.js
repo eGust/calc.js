@@ -46,15 +46,15 @@ function Operator(str, rank, operand, name, fnModifier, fnCalc) {
     this.calc = fnCalc; //function(args, symbols) {};
 }
 
-const 
+const
 	fnModifiers = {
-		gaurd:	function (curOp, stackExpr, stackScope) 
+		gaurd:	function (curOp, stackExpr, stackScope)
 			{	// #GAURD
 				stackExpr.push(curOp)
 				stackScope.curScope = scpOperator;
 				return true;
 			},
-		unary:	function (curOp, stackExpr, stackScope) 
+		unary:	function (curOp, stackExpr, stackScope)
 			{	// + - ~ !
 				var stkOp = stackExpr.cur();
 				stkOp.push(curOp);
@@ -62,7 +62,7 @@ const
 				stackScope.curScope = scpOperator;
 				return true;
 			},
-		binary:	function (curOp, stackExpr, stackScope) 
+		binary:	function (curOp, stackExpr, stackScope)
 			{	// ** * / % \  + - & | ^  == != > >= > >=  && ||
 				var stkOp = stackExpr.cur(), crank = curOp.op.rank;
 
@@ -77,7 +77,7 @@ const
 				stackScope.curScope = scpOperator;
 				return true;
 			},
-		comma:	function (curOp, stackExpr, stackScope) 
+		comma:	function (curOp, stackExpr, stackScope)
 			{	// ,
 				var scp = stackScope.cur();
 				if (scp != scpArray && scp != scpBracket)
@@ -97,7 +97,7 @@ const
 				stackScope.curScope = scpOperator;
 				return true;
 			},
-		quest:	function (curOp, stackExpr, stackScope) 
+		quest:	function (curOp, stackExpr, stackScope)
 			{	// ?
 				var stkOp = stackExpr.cur(), crank = curOp.op.rank;
 
@@ -113,7 +113,7 @@ const
 				stackScope.curScope = scpOperator;
 				return true;
 			},
-		colon:	function (curOp, stackExpr, stackScope) 
+		colon:	function (curOp, stackExpr, stackScope)
 			{	// :
 				var scp = stackScope.cur();
 				if (scp !== scpQuest)
@@ -165,6 +165,7 @@ const
 '_OpenDerefArray':	Operator( '[',	81,	-1,	'_OpenDerefArray',	null,	null /* not real op holder */ ),
 'Property':		Operator( '.',	81,	2,	'Property',	fnModifiers.binary,	function(args, sbt) { return CalcLib.property(args[0], args[1], sbt); } ),
 'Power':		Operator( '**',	47,	2,	'Power',	fnModifiers.binary,	function(args, sbt) { return CalcLib.power(args[0].calc(sbt), args[1].calc(sbt)); } ),
+'Root':			Operator( '*/', 47, 2,	'Root',		fnModifiers.binary, function(args, sbt) { return CalcLib.nroot(args[0].calc(sbt), args[1].calc(sbt)); } ),
 'Times':		Operator( '*',	46,	2,	'Times',	fnModifiers.binary,	function(args, sbt) { return CalcLib.multiply(args[0].calc(sbt), args[1].calc(sbt)); } ),
 'Divide':		Operator( '/',	46,	2,	'Divide',	fnModifiers.binary,	function(args, sbt) { return CalcLib.divide(args[0].calc(sbt), args[1].calc(sbt)); } ),
 'Modulo':		Operator( '%',	46,	2,	'Modulo',	fnModifiers.binary,	function(args, sbt) { return CalcLib.modulo(args[0].calc(sbt), args[1].calc(sbt)); } ),

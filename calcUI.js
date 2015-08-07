@@ -460,7 +460,7 @@ $(function () {
 
 	$('#calcInput').keydown(function(e) {
 		var handled = true;
-		if (e.ctrlKey || e.metaKey) {
+		if (e.ctrlKey || e.metaKey && !(e.altKey || e.shiftKey)) {
 			switch (e.keyCode) {
 				case 73: // I
 					insertNotation('infix');
@@ -471,10 +471,34 @@ $(function () {
 				default:
 					handled = false;
 			}
-		} else
-		switch(e.keyCode) {
+		} else if (e.altKey && !(e.ctrlKey || e.metaKey || e.shiftKey)) {
+			switch (e.keyCode) {
+				case 66: // B
+					$('.button.grouped[data-scale="bin"]').click();
+					break;
+				case 68: // D
+					$('.button.grouped[data-scale="dec"]').click();
+					break;
+				case 72: // H
+				case 88: // X
+					$('.button.grouped[data-scale="hex"]').click();
+					break;
+				case 73: // I
+					$('#IntSep').click();
+					break;
+				case 82: // R
+					$('#RealSep').click();
+					break;
+				default:
+					handled = false;
+			}
+		} else switch(e.keyCode) {
 			case 27:
-				clearInput();
+				if ($("#calcInput").val())
+					clearInput();
+				else
+					handled = false;
+				
 				break;
 			//case 33:  // page up
 			case 38:  // up

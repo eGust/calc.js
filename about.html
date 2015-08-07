@@ -14,7 +14,7 @@
 
 <body>
 	<div id="Caption">
-		<h2>eCalculator v0.6</h2>
+		<h2>eCalculator v0.7.0</h2>
 	<div>
 		<h3>Features</h3>
 		<div class="readme">
@@ -38,7 +38,7 @@
 				<br>
 				Strings:
 				<li>Single/double quoted like 'abc' "str"</li>
-				<li>Use "\" to escape special characters, like 
+				<li>Use "\" to escape special characters, like
 <pre>
 \'	single quotation mark
 \"	double quotation mark
@@ -54,9 +54,9 @@
 * Those characters are not displayed in the screen.
 </pre>
 </li>
-				<li>NOTE 
+				<li>NOTE
 <pre>
-Actually it uses JSON's string format with additional "\'". 
+Actually it uses JSON's string format with additional "\'".
 You must follow its syntax or get an error.
 For more information you can visit <a target="_blank" href="http://json.org/">http://json.org/</a>
 </pre>
@@ -65,24 +65,25 @@ For more information you can visit <a target="_blank" href="http://json.org/">ht
 				<br>
 				Currently supported operators
 				<li>
-					Basic: 
+					Basic:
 <pre>
 + : Plus (&plus;)
-- : Minus (&minus;) 
-* : Times (&times;) 
-/ : Divide (&divide;) 
+- : Minus (&minus;)
+* : Times (&times;)
+/ : Divide (&divide;)
 % : Module
 </pre>
 				</li>
 				<li>
-					Extanded: 
+					Extanded:
 <pre>
 ** : Power
 // : Integer Divide
+*/ : N-Power's Root: a */ b == a ** (1/b)
 </pre>
 				</li>
 				<li>
-					Bitwise (integers only): 
+					Bitwise (integers only):
 <pre>
 ~ : Bitwise NOT
 &amp; : Bitwise AND
@@ -91,7 +92,7 @@ For more information you can visit <a target="_blank" href="http://json.org/">ht
 </pre>
 				</li>
 				<li>
-					Logical (true = 1, false = 0): 
+					Logical (true = 1, false = 0):
 <pre>
 ! : Logical NOT
 &amp;&amp; : Logical  AND
@@ -99,7 +100,7 @@ For more information you can visit <a target="_blank" href="http://json.org/">ht
 </pre>
 				</li>
 				<li>
-					Relational (true = 1, false = 0): 
+					Relational (true = 1, false = 0):
 <pre>
 == : Equal
 != : Not equal
@@ -110,7 +111,7 @@ For more information you can visit <a target="_blank" href="http://json.org/">ht
 </pre>
 				</li>
 				<li>
-					Quest (lazy version): 
+					Quest (lazy version):
 <pre>
 condition ? true value : false value
 for exp.
@@ -122,7 +123,7 @@ for exp.
 				<lt>Operator Orders</lt>
 				<li>Use <code>(</code> and <code>)</code> to promote orders.
 <pre>
-1	**
+1	** */
 2	* / % //
 3	+ -
 4	~ &amp; | ^
@@ -133,7 +134,7 @@ for exp.
 				</li>
 				<lt>Variable, Constants and Functions</lt>
 				<li>
-					Assign Variable: 
+					Assign Variable:
 <pre>
 =	a = ...
 a = b = 3	=>	a = (b = 3)
@@ -142,14 +143,14 @@ a = 1 + (b = 2)	=> a = 3, b = 2
 </pre>
 				</li>
 				<li>
-					Constants: 
+					Constants:
 <pre>
 E:	2.7182818...
 PI:	3.1415926...
 </pre>
 				</li>
 				<li>
-					Functions: 
+					Functions:
 <pre>
 abs:	absolute value
 ln:	log based on E
@@ -164,21 +165,21 @@ signed/unsigned:	convert interger to signed/unsigned.
 
 				<lt>Infix/Postfix Notation</lt>
 				<li>
-					Infix (shortcut Ctrl+I): 
+					Infix (shortcut Ctrl+I):
 <pre>
 #{IN: 1+2}
 #{IN: 9*8-7/6}
 </pre>
 				</li>
 				<li>
-					Postfix (shortcut Ctrl+R): 
+					Postfix (shortcut Ctrl+R):
 <pre>
 #{RPN: 1 2 +}
 #{RPN: 9 8 * 7 6 / -}
 </pre>
 				</li>
 				<li>
-					Mix up: 
+					Mix up:
 <pre>
 #{RPN: 1 #{IN: 2+3} +}
 #{IN: 2+#{RPN: 9 8 * 7 6 / -}}
@@ -187,13 +188,13 @@ signed/unsigned:	convert interger to signed/unsigned.
 
 				<lt>Postfix Notation Syntax</lt>
 				<li>
-					Operators: 
+					Operators:
 <pre>
 Unary:
 ~	#{RPN: 1 ~}
 !	#{RPN: 0 !}
 Not supported for conflict reason:
-	+	-	
+	+	-
 ( Should use 0 and binary operators like #{RPN: 0 1 -} )
 
 Binary:
@@ -215,7 +216,7 @@ Comma(,)s are ignored in RPN mode. So you can use them instead of whitespaces. F
 </pre>
 				</li>
 				<li>
-					Function call: 
+					Function call:
 <pre>
 fn(args...) equals to (args... fn), but no comma(,)s joined into the arguments.
 
@@ -225,7 +226,7 @@ e.g.
 #{IN: log(8**4, 6-2)} equals to #{RPN:(8 4**,6 2-,log)}
 </pre>
 				</li>
-				
+
 			</ul>
 			<a target="_blank" href="https://github.com/eGust/calc.js">https://github.com/eGust/calc.js</a>
 			<hr>

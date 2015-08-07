@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "eCalculator",
-  "version": "0.6",
+  "version": "0.7.0",
 
   "description": "A powerful calculator.",
   "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'",
@@ -20,11 +20,11 @@
     "default_icon": "./icons/calc-19.png",
     "default_popup": "index.html"
   },
-  
+
   "permissions": [
     "storage"
   ],
-  
+
   "optional_permissions": ["tabs", "storage"],
   "options_page": "options.html",
 

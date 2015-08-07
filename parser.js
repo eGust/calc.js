@@ -1,7 +1,7 @@
 /*
 [dependency]
 	decimal.js
-	
+
 	lexer.js
 	exprs.js
 	operators.js
@@ -53,7 +53,7 @@ function InfixExprConstructor(scanner, stackScope) {
 		//console.log('[infix]', scanner.nextToken, str);
 
 		switch (scanner.nextToken) {
-			case tkOperator: 
+			case tkOperator:
 				var op = curScope === scpOperator ? this.setOperator[str] : this.setValue[str];
 				if (op === undefined)
 				{
@@ -79,8 +79,8 @@ function InfixExprConstructor(scanner, stackScope) {
 				if (curScope !== scpOperator)
 					throw "Invalid Operator: " + scanner.nextToken;
 
-				var 
-					ve = scanner.nextToken === tkIdentity ? IdentityExpr(str) : ValueExpr(str, scanner.nextToken === tkNumber), 
+				var
+					ve = scanner.nextToken === tkIdentity ? IdentityExpr(str) : ValueExpr(str, scanner.nextToken === tkNumber),
 					oe = stackExpr.cur();
 				if (!oe.push(ve))
 				{
@@ -92,9 +92,9 @@ function InfixExprConstructor(scanner, stackScope) {
 			default:
 			/* Invalid!
 			case tkInvalidInput:
-			case tkInvalidNumber: 
-			case tkInvalidHex: 
-			case tkInvalidOctal: 
+			case tkInvalidNumber:
+			case tkInvalidHex:
+			case tkInvalidOctal:
 			case tkInvalidBin:
 				// invalid! */
 				throw '[ERROR] At position ' + scanner.from + ': "' + str + '" - ' + scanner.nextToken.name;
@@ -133,8 +133,14 @@ function InfixExprConstructor(scanner, stackScope) {
 	// const SoloSimples = "+ - ~ !".split(" "), DuoSimples = "** * / % //  + - & | ^  == != > >= < <=  && ||".split(" ");
 	const
 		opOperators = [ 'Positive', 'Negative', 'BitNot', 'LgcNot', 'OpenBracket', 'OpenArray', ],
-		opValues = [ '_OpenFunction', '_OpenDerefArray', 'Property', 'Power', 'Times', 'Divide', 'Modulo', 'IntDivide', 'Plus', 'Minus', 'BitAnd', 'BitOr', 'BitXor', 'CmpEqual', 'CmpNotEqual', 'CmpGreater', 'CmpGreaterEqual', 'CmpLess', 'CmpLessEqual', 'LgcAnd', 'LgcOr', '_Quest', 'Colon', 'Unit', 'Assign', 'CloseBracket', 'CloseArray', 'Comma', ];
-	
+		opValues = [ '_OpenFunction', '_OpenDerefArray', 'Property',
+		'Power', 'Times', 'Root',
+		'Divide', 'Modulo', 'IntDivide', 'Plus', 'Minus',
+		'BitAnd', 'BitOr', 'BitXor',
+		'CmpEqual', 'CmpNotEqual', 'CmpGreater', 'CmpGreaterEqual', 'CmpLess', 'CmpLessEqual',
+		'LgcAnd', 'LgcOr',
+		'_Quest', 'Colon', 'Unit', 'Assign', 'CloseBracket', 'CloseArray', 'Comma', ];
+
 	for (i in opOperators) {
 		op = operators[opOperators[i]];
 		setOperators[op.op] = op;
@@ -159,7 +165,7 @@ function PostfixExprContructor(scanner, stackScope) {
 		//console.log('[postfix]', scanner.nextToken, str);
 
 		switch (scanner.nextToken) {
-			case tkOperator: 
+			case tkOperator:
 				switch (str) {
 					case '(':
 						stackScope.push(scpBracket);
@@ -168,7 +174,7 @@ function PostfixExprContructor(scanner, stackScope) {
 					case ')':
 						if (stackScope.cur() !== scpBracket)
 							throw 'Unexpected ")"';
-						
+
 						stackScope.pop();
 						var args = [], e = stack.cur();
 						while ( !(e.type === etOperator && e.op === operators.OpenFunction) ) {
@@ -213,9 +219,9 @@ function PostfixExprContructor(scanner, stackScope) {
 			default:
 			/* Invalid!
 			case tkInvalidInput:
-			case tkInvalidNumber: 
-			case tkInvalidHex: 
-			case tkInvalidOctal: 
+			case tkInvalidNumber:
+			case tkInvalidHex:
+			case tkInvalidOctal:
 			case tkInvalidBin:
 				// invalid! */
 				throw '[ERROR] At position ' + scanner.from + ': "' + str + '" - ' + scanner.nextToken.name;
@@ -294,7 +300,7 @@ function PostfixExprContructor(scanner, stackScope) {
 	PostfixExprContructor.prototype.supported = supported;
 })();
 
-var 
+var
 	NotationExprMap = {
 		'infix':	InfixExprConstructor,
 		'postfix':	PostfixExprContructor,
@@ -326,11 +332,11 @@ function parse(scanner) {
 				stack.push(cur = ec(scanner, stackScope));
 				stackScope.push(scpInline);
 				break;
-			case tkOperator: 
+			case tkOperator:
 				if (str === '}' && stackScope.cur() === scpInline) {
 					if (stack.count <= 1)
 						throw 'Unexpected operator "}"';
-					
+
 					stackScope.pop();
 					var e = stack.pop().close();
 					assign = assign || e.assign;
@@ -349,9 +355,9 @@ function parse(scanner) {
 			default:
 			/* Invalid!
 			case tkInvalidInput:
-			case tkInvalidNumber: 
-			case tkInvalidHex: 
-			case tkInvalidOctal: 
+			case tkInvalidNumber:
+			case tkInvalidHex:
+			case tkInvalidOctal:
 			case tkInvalidBin:
 				// invalid! */
 				throw '[ERROR] At position ' + scanner.from + ': "' + str + '" - ' + scanner.nextToken.name;
