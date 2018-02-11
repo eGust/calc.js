@@ -1,1 +1,2 @@
-http://egust.altervista.org/calc/
+# eCalculator
+A powerful command-line expression calculator.
